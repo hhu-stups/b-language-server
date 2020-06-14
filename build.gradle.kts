@@ -10,6 +10,7 @@ plugins {
     idea
     // Apply the application plugin to add support for building a CLI application.
     application
+    id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
 repositories {
@@ -24,6 +25,8 @@ dependencies {
 
     // Use the Kotlin JDK 8 standard library.
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+
+    implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j",  "0.9.0")
 
     // Use the Kotlin test library.
     testImplementation("org.jetbrains.kotlin:kotlin-test")
