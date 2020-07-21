@@ -1,11 +1,14 @@
 package b.language.server
 
+import b.language.server.dataStorage.Settings
+import com.google.gson.JsonObject
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.LanguageServer
 import org.eclipse.lsp4j.services.TextDocumentService
 import org.eclipse.lsp4j.services.WorkspaceService
 import java.util.concurrent.CompletableFuture
+import kotlin.collections.HashMap
 import kotlin.system.exitProcess
 
 
@@ -14,12 +17,13 @@ class Server : LanguageServer {
     private val textDocumentService : TextDocumentService
     private val bWorkspaceService : WorkspaceService
     lateinit var languageClient : LanguageClient
-
-
+    var globalSettings : Settings = Settings()
+    val documentSettings : HashMap<String, CompletableFuture<Settings>> = HashMap()
+    var configurationAbility : Boolean = true;
 
     init {
         textDocumentService = BDocumentService(this)
-        bWorkspaceService = BWorkspaceService()
+        bWorkspaceService = BWorkspaceService(this)
     }
 
 
@@ -39,17 +43,18 @@ class Server : LanguageServer {
      */
     override fun initialize(params: InitializeParams?): CompletableFuture<InitializeResult> {
         val res = InitializeResult(ServerCapabilities())
-        res.capabilities.setCodeActionProvider(true)
-        res.capabilities.completionProvider = CompletionOptions()
-        res.capabilities.definitionProvider = false
+        res.capabilities.setCodeActionProvider(false)
+//        res.capabilities.definitionProvider = false
         res.capabilities.hoverProvider = false
         res.capabilities.referencesProvider = false
         res.capabilities.setTextDocumentSync(TextDocumentSyncKind.Full)
         res.capabilities.documentSymbolProvider = false
-
         return CompletableFuture.supplyAsync { res }
     }
 
+    override fun initialized(params: InitializedParams?) {
+        //languageClient.registerCapability(DidChangeConfigurationCapabilities())
+    }
 
     /**
      * The shutdown request is sent from the client to the server. It asks the
@@ -72,7 +77,7 @@ class Server : LanguageServer {
      * A notification to ask the server to exit its process.
      */
     override fun exit() {
-        exitProcess(0);
+        exitProcess(0)
     }
 
 
@@ -86,5 +91,34 @@ class Server : LanguageServer {
 
     fun setRemoteProxy(remoteProxy: LanguageClient) {
         this.languageClient = remoteProxy
+    }
+
+
+    /**
+     * Get the settings for the current document - will fallback to global settings eventually; If setting not cached
+     * method will try to get setting from the client
+     * @param uri the uri of the document requested
+     * @return settings of the document requested
+     */
+    fun getDocumentSettings(uri : String) : CompletableFuture<Settings> {
+        this.languageClient.showMessage(
+                MessageParams(MessageType.Log, "uri $uri " ))
+        if(!configurationAbility){
+            val returnValue = CompletableFuture<Settings>()
+            returnValue.complete(globalSettings)
+            return returnValue
+        }
+        // if client has configuration abilities
+        return if(documentSettings.containsKey(uri))
+        {
+            documentSettings[uri]!!
+        }else{
+            val configurationItem = ConfigurationItem()
+            configurationItem.scopeUri = uri
+            configurationItem.section = "languageServer"
+            val requestedConfig = languageClient.configuration(ConfigurationParams(listOf(configurationItem)))
+            documentSettings[uri] = CompletableFuture.allOf(requestedConfig).thenApply{ castJsonToSetting(requestedConfig.get().first() as JsonObject) }
+            documentSettings[uri]!!
+        }
     }
 }

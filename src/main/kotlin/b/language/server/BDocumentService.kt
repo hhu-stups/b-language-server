@@ -1,14 +1,16 @@
 package b.language.server
 
+import b.language.server.dataStorage.Problem
 import org.eclipse.lsp4j.*
-import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.TextDocumentService
-import java.util.concurrent.CompletableFuture
+import java.io.File
+import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 
 class BDocumentService(private val server: Server) : TextDocumentService {
 
     private val documents = ConcurrentHashMap<String, String>()
+    private val issueTracker : ConcurrentHashMap<String, ArrayList<String>> = ConcurrentHashMap()
 
     /**
      * The document open notification is sent from the client to the server to
@@ -29,8 +31,30 @@ class BDocumentService(private val server: Server) : TextDocumentService {
      * Registration Options: TextDocumentSaveRegistrationOptions
      */
     override fun didSave(params: DidSaveTextDocumentParams?) {
-        println("Save")
-        TODO("Not yet implemented")
+
+
+        val uri = URI(params!!.textDocument.uri)
+
+        val path = File(uri.path)
+
+        val errorPath = File(path.parent + "/tmp/_error.json")
+        val errorDict = File(path.parent + "/tmp")
+
+        val clientSettings = server.getDocumentSettings(params.textDocument.uri)
+
+        clientSettings.thenAccept{ setting ->
+            val probInterface = ProBInterface(setting.probHome, path, errorDict, errorPath, server = server)
+            probInterface.createFolder()
+            probInterface.performActionOnDocument()
+
+            val problemHandler = ProblemHandler()
+
+            val problemList: List<Problem> = problemHandler.readProblems(errorPath.absolutePath)
+            val diagnostics: List<Diagnostic> = problemHandler.transformProblems(problemList)
+
+            server.languageClient.publishDiagnostics(PublishDiagnosticsParams(params.textDocument.uri, diagnostics))
+        }
+
     }
 
     /**
@@ -42,7 +66,7 @@ class BDocumentService(private val server: Server) : TextDocumentService {
      * Registration Options: TextDocumentRegistrationOptions
      */
     override fun didClose(params: DidCloseTextDocumentParams?) {
-        TODO("Not yet implemented")
+        server.documentSettings.remove(params!!.textDocument.uri)
     }
 
     /**
@@ -52,13 +76,13 @@ class BDocumentService(private val server: Server) : TextDocumentService {
      * Registration Options: TextDocumentChangeRegistrationOptions
      */
     override fun didChange(params: DidChangeTextDocumentParams?) {
-
-        CompletableFuture.runAsync {
-             val diagnostics : ArrayList<Diagnostic> =
-                     arrayListOf(Diagnostic(Range(Position(1,1), Position(1,1)), "Test",  DiagnosticSeverity.Error, "Test"))
-            server.languageClient.publishDiagnostics(PublishDiagnosticsParams(params?.textDocument?.uri, diagnostics))
-        }
+      //Nothing
     }
+
+
+
+
+
 
 
 

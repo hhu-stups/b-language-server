@@ -15,7 +15,6 @@ plugins {
 
 repositories {
     // Use jcenter for resolving dependencies.
-    // You can declare any Maven/Ivy/file repository here.
     jcenter()
 }
 
@@ -26,7 +25,11 @@ dependencies {
     // Use the Kotlin JDK 8 standard library.
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
+    // eclipse lsp implementation
     implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j",  "0.9.0")
+
+    // json converter
+    implementation("com.google.code.gson" ,"gson" ,"2.8.6")
 
     // Use the Kotlin test library.
     testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -34,7 +37,6 @@ dependencies {
     // Use the Kotlin JUnit integration.
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
 }
-
 application {
     // Define the main class for the application.
     mainClassName = "b.language.server.AppKt"
