@@ -1,16 +1,17 @@
 package b.language.server
 
-import b.language.server.dataStorage.Problem
+import b.language.server.proBMangement.CommandCouldNotBeExecutedException
+import b.language.server.proBMangement.PathCouldNotBeCreatedException
+import b.language.server.proBMangement.ProBCommandLineAccess
+import b.language.server.proBMangement.ProBInterface
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.TextDocumentService
-import java.io.File
-import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 
 class BDocumentService(private val server: Server) : TextDocumentService {
 
     private val documents = ConcurrentHashMap<String, String>()
-    private val issueTracker : ConcurrentHashMap<String, ArrayList<String>> = ConcurrentHashMap()
+    private val issueTracker : ConcurrentHashMap<String, Set<String>> = ConcurrentHashMap()
 
     /**
      * The document open notification is sent from the client to the server to
@@ -32,29 +33,35 @@ class BDocumentService(private val server: Server) : TextDocumentService {
      */
     override fun didSave(params: DidSaveTextDocumentParams?) {
 
+        val currentUri = params!!.textDocument.uri
+        val clientSettings = server.getDocumentSettings(currentUri)
 
-        val uri = URI(params!!.textDocument.uri)
+        clientSettings.thenAccept{ settings ->
+            val prob : ProBInterface = ProBCommandLineAccess()
 
-        val path = File(uri.path)
-
-        val errorPath = File(path.parent + "/tmp/_error.json")
-        val errorDict = File(path.parent + "/tmp")
-
-        val clientSettings = server.getDocumentSettings(params.textDocument.uri)
-
-        clientSettings.thenAccept{ setting ->
-            val probInterface = ProBInterface(setting.probHome, path, errorDict, errorPath, server = server)
-            probInterface.createFolder()
-            probInterface.performActionOnDocument()
-
-            val problemHandler = ProblemHandler()
-
-            val problemList: List<Problem> = problemHandler.readProblems(errorPath.absolutePath)
-            val diagnostics: List<Diagnostic> = problemHandler.transformProblems(problemList)
-
-            server.languageClient.publishDiagnostics(PublishDiagnosticsParams(params.textDocument.uri, diagnostics))
+            try{
+                val diagnostics: List<Diagnostic> = prob.checkDocument(currentUri, settings)
+                server.languageClient.publishDiagnostics(PublishDiagnosticsParams(currentUri, diagnostics))
+                val filesWithProblems = diagnostics.map { diagnostic -> diagnostic.source }
+                calculateToInvalidate(currentUri, filesWithProblems)
+                        .forEach{uri -> server.languageClient.publishDiagnostics(PublishDiagnosticsParams(uri, listOf()))}
+                issueTracker[currentUri] = filesWithProblems.toSet()
+            }catch (e : PathCouldNotBeCreatedException ){
+                server.languageClient.showMessage(MessageParams(MessageType.Error, e.message))
+            }catch (e : CommandCouldNotBeExecutedException){
+                server.languageClient.showMessage(MessageParams(MessageType.Error, e.message))
+            }
         }
+    }
 
+    /**
+     * Gets all uris that are no longer contain problems
+     * @param currentUri the uri of the current main file
+     * @param filesWithProblems uris of files containing problems
+     */
+    fun calculateToInvalidate(currentUri : String, filesWithProblems : List<String>) : List<String>{
+        val currentlyDisplayed = issueTracker[currentUri].orEmpty()
+        return currentlyDisplayed.subtract(filesWithProblems).toList()
     }
 
     /**
@@ -78,14 +85,5 @@ class BDocumentService(private val server: Server) : TextDocumentService {
     override fun didChange(params: DidChangeTextDocumentParams?) {
       //Nothing
     }
-
-
-
-
-
-
-
-
-
 
 }

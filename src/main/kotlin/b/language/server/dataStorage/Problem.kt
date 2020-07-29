@@ -1,6 +1,5 @@
 package b.language.server.dataStorage
 
-import org.eclipse.lsp4j.Position
 
 /**
  * kotlin representation of prob ndjson problems

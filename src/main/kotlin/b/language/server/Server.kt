@@ -19,7 +19,7 @@ class Server : LanguageServer {
     lateinit var languageClient : LanguageClient
     var globalSettings : Settings = Settings()
     val documentSettings : HashMap<String, CompletableFuture<Settings>> = HashMap()
-    var configurationAbility : Boolean = true;
+    var configurationAbility : Boolean = true
 
     init {
         textDocumentService = BDocumentService(this)
@@ -101,8 +101,6 @@ class Server : LanguageServer {
      * @return settings of the document requested
      */
     fun getDocumentSettings(uri : String) : CompletableFuture<Settings> {
-        this.languageClient.showMessage(
-                MessageParams(MessageType.Log, "uri $uri " ))
         if(!configurationAbility){
             val returnValue = CompletableFuture<Settings>()
             returnValue.complete(globalSettings)
