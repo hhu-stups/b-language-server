@@ -33,14 +33,29 @@ class BDocumentService(private val server: Server) : TextDocumentService {
      */
     override fun didSave(params: DidSaveTextDocumentParams?) {
 
+   //     server.languageClient.showMessage(MessageParams(MessageType.Log,"Penis"))
+
         val currentUri = params!!.textDocument.uri
+        checkUri(currentUri)
+
+    }
+
+    /**
+     *
+     * @param the uri to perform actions on
+     */
+    fun checkUri(currentUri : String){
         val clientSettings = server.getDocumentSettings(currentUri)
+
+   //     server.languageClient.showMessage(MessageParams(MessageType.Log,clientSettings.toString()))
 
         clientSettings.thenAccept{ settings ->
             val prob : ProBInterface = ProBCommandLineAccess()
+      //      server.languageClient.showMessage(MessageParams(MessageType.Log,settings.toString()))
 
             try{
                 val diagnostics: List<Diagnostic> = prob.checkDocument(currentUri, settings)
+
                 server.languageClient.publishDiagnostics(PublishDiagnosticsParams(currentUri, diagnostics))
                 val filesWithProblems = diagnostics.map { diagnostic -> diagnostic.source }
                 calculateToInvalidate(currentUri, filesWithProblems)
@@ -83,7 +98,8 @@ class BDocumentService(private val server: Server) : TextDocumentService {
      * Registration Options: TextDocumentChangeRegistrationOptions
      */
     override fun didChange(params: DidChangeTextDocumentParams?) {
-      //Nothing
+        val currentUri = params!!.textDocument.uri
+        checkUri(currentUri)
     }
 
 }

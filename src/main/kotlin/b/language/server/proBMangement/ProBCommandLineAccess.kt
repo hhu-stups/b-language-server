@@ -25,7 +25,7 @@ class ProBCommandLineAccess : ProBInterface{
 
         val result = createFolder(errorDict, errorPath)
          if(!result){
-            throw PathCouldNotBeCreatedException("The Path leading to $errorPath could has not been created due some issue.")
+            throw PathCouldNotBeCreatedException("The Path leading to $errorPath has not been created due some issue.")
         }
         val command = buildCommand(settings, path, errorPath)
 
@@ -163,7 +163,10 @@ class ProBCommandLineAccess : ProBInterface{
                 .map { problem -> Diagnostic(
                         Range(
                                 Position(problem.start.line, problem.start.col),
-                                Position(problem.end.line, problem.end.col)), problem.message,
+                                Position(problem.end.line, problem.end.col)),
+
+                        problem.message,
+
                         when (problem.type) {
                             "error" -> {
                                 DiagnosticSeverity.Error
@@ -178,8 +181,9 @@ class ProBCommandLineAccess : ProBInterface{
                                 DiagnosticSeverity.Hint
                             }
                         },
-                        problem.file,
-                        " probcli v.${problem.version}")
+                        problem.file
+                        //code =  " probcli v.${problem.version}"
+                        )
                 }
     }
 }

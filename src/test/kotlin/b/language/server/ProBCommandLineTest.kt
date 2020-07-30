@@ -12,6 +12,7 @@ import kotlin.test.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ProBCommandLineTest{
 
@@ -177,9 +178,19 @@ class ProBCommandLineTest{
 
         val diagnostic = Diagnostic(Range(
                 org.eclipse.lsp4j.Position(31,54),
-                org.eclipse.lsp4j.Position(53, 65)), message,  DiagnosticSeverity.Hint, problemFile, " probcli v.$version" )
+                org.eclipse.lsp4j.Position(5, 65)), message,  DiagnosticSeverity.Hint, problemFile, " probcli v.$version" )
         assertEquals(diagnostic, transformedProblem)
 
     }
+
+
+    @Test
+    fun test_createFolders_success(@TempDir tempPath : File = File("tmp")){
+        val errorDict = File(tempPath.path+"/tmp")
+        val errorPath = File(tempPath.path+"/tmp/hallo.njson")
+        val result = ProBCommandLineAccess().createFolder(errorDict, errorPath)
+        assertTrue(result)
+    }
+
 
 }
