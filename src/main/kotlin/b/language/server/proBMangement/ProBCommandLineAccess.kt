@@ -1,5 +1,7 @@
 package b.language.server.proBMangement
 
+import b.language.server.communication.Communicator
+import b.language.server.communication.CommunicatorInterface
 import b.language.server.dataStorage.Problem
 import b.language.server.dataStorage.Settings
 import com.google.gson.Gson
@@ -11,13 +13,14 @@ import java.net.URI
 /**
  * Access ProB via command line
  */
-class ProBCommandLineAccess : ProBInterface{
+class ProBCommandLineAccess(val communicator : CommunicatorInterface) : ProBInterface{
     /**
      * Checks the given document with the help of ProB; Will setup all needed steps to ensure a clean process
      * @param uri the source to check
      * @return a list of all problems found
      */
     override fun checkDocument(uri : String, settings: Settings): List<Diagnostic> {
+        communicator.sendDebugMessage("checking document ($uri) with proB", MessageType.Info )
         val realUri = URI(uri)
         val path = File(realUri.path)
         val errorPath = File(path.parent + "/tmp/_error.json")
@@ -27,11 +30,14 @@ class ProBCommandLineAccess : ProBInterface{
          if(!result){
             throw PathCouldNotBeCreatedException("The Path leading to $errorPath has not been created due some issue.")
         }
+        communicator.sendDebugMessage("creation successful", MessageType.Info)
         val command = buildCommand(settings, path, errorPath)
+        communicator.sendDebugMessage("sending command <$command> to proB", MessageType.Info)
 
         performActionOnDocument(command)
 
         val problems = readProblems(errorPath.path)
+        communicator.sendDebugMessage("found the following problems: $problems", MessageType.Info)
 
         return transformProblems(problems)
     }
@@ -84,6 +90,7 @@ class ProBCommandLineAccess : ProBInterface{
      * @return success of the action
      */
     fun createFolder(errorDict : File, errorPath: File) : Boolean{
+        communicator.sendDebugMessage("creating errorDict $errorDict and errorFile $errorPath", MessageType.Info)
         errorDict.mkdirs()
         FileWriter(errorPath, false).close()
         return errorDict.exists() && errorPath.exists()

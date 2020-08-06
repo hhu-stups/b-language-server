@@ -1,5 +1,6 @@
 package b.language.server
 
+import b.language.server.communication.CommunicatorInterface
 import b.language.server.proBMangement.CommandCouldNotBeExecutedException
 import b.language.server.proBMangement.PathCouldNotBeCreatedException
 import b.language.server.proBMangement.ProBCommandLineAccess
@@ -8,7 +9,7 @@ import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.TextDocumentService
 import java.util.concurrent.ConcurrentHashMap
 
-class BDocumentService(private val server: Server) : TextDocumentService {
+class BDocumentService(private val server: Server, private val communicator: CommunicatorInterface) : TextDocumentService {
 
     private val documents = ConcurrentHashMap<String, String>()
     private val issueTracker : ConcurrentHashMap<String, Set<String>> = ConcurrentHashMap()
@@ -33,45 +34,47 @@ class BDocumentService(private val server: Server) : TextDocumentService {
      */
     override fun didSave(params: DidSaveTextDocumentParams?) {
 
-   //     server.languageClient.showMessage(MessageParams(MessageType.Log,"Penis"))
-
-        val currentUri = params!!.textDocument.uri
-        checkUri(currentUri)
+        communicator.sendDebugMessage("document ${params!!.textDocument.uri} was saved", MessageType.Info)
+        val currentUri = params.textDocument.uri
+        checkDocument(currentUri)
 
     }
 
     /**
-     *
+     * checks a document via prob an the set options
      * @param the uri to perform actions on
      */
-    fun checkUri(currentUri : String){
-        val clientSettings = server.getDocumentSettings(currentUri)
+    fun checkDocument(currentUri : String){
 
-   //     server.languageClient.showMessage(MessageParams(MessageType.Log,clientSettings.toString()))
+        val clientSettings = server.getDocumentSettings(currentUri)
+        communicator.sendDebugMessage("waiting for document settings", MessageType.Info)
 
         clientSettings.thenAccept{ settings ->
-            val prob : ProBInterface = ProBCommandLineAccess()
-      //      server.languageClient.showMessage(MessageParams(MessageType.Log,settings.toString()))
+            communicator.setDebugMode(settings.debugMode)
+            val prob : ProBInterface = ProBCommandLineAccess(communicator)
+            communicator.sendDebugMessage("settings are $settings", MessageType.Info)
 
             try{
                 val diagnostics: List<Diagnostic> = prob.checkDocument(currentUri, settings)
-
-                server.languageClient.publishDiagnostics(PublishDiagnosticsParams(currentUri, diagnostics))
+                communicator.sendDebugMessage("created diagnostics $diagnostics", MessageType.Info)
+                communicator.publishDiagnostics(PublishDiagnosticsParams(currentUri, diagnostics))
                 val filesWithProblems = diagnostics.map { diagnostic -> diagnostic.source }
-                calculateToInvalidate(currentUri, filesWithProblems)
-                        .forEach{uri -> server.languageClient.publishDiagnostics(PublishDiagnosticsParams(uri, listOf()))}
+                val invalidFiles = calculateToInvalidate(currentUri, filesWithProblems)
+                invalidFiles.forEach{uri -> communicator.publishDiagnostics(PublishDiagnosticsParams(uri, listOf()))}
+                communicator.sendDebugMessage("invalidating old files $invalidFiles", MessageType.Info)
                 issueTracker[currentUri] = filesWithProblems.toSet()
             }catch (e : PathCouldNotBeCreatedException ){
-                server.languageClient.showMessage(MessageParams(MessageType.Error, e.message))
+                communicator.showMessage(e.message!!, MessageType.Error)
             }catch (e : CommandCouldNotBeExecutedException){
-                server.languageClient.showMessage(MessageParams(MessageType.Error, e.message))
+                communicator.showMessage(e.message!!, MessageType.Error)
             }
         }
+
     }
 
     /**
      * Gets all uris that are no longer contain problems
-     * @param currentUri the uri of the current main file
+     * @param currentUri the uri of the curre   nt main file
      * @param filesWithProblems uris of files containing problems
      */
     fun calculateToInvalidate(currentUri : String, filesWithProblems : List<String>) : List<String>{
@@ -88,7 +91,8 @@ class BDocumentService(private val server: Server) : TextDocumentService {
      * Registration Options: TextDocumentRegistrationOptions
      */
     override fun didClose(params: DidCloseTextDocumentParams?) {
-        server.documentSettings.remove(params!!.textDocument.uri)
+        communicator.sendDebugMessage("document ${params!!.textDocument.uri} was closed - removing meta data", MessageType.Info)
+        server.documentSettings.remove(params.textDocument.uri)
     }
 
     /**
@@ -98,8 +102,9 @@ class BDocumentService(private val server: Server) : TextDocumentService {
      * Registration Options: TextDocumentChangeRegistrationOptions
      */
     override fun didChange(params: DidChangeTextDocumentParams?) {
-        val currentUri = params!!.textDocument.uri
-        checkUri(currentUri)
+        communicator.sendDebugMessage("document ${params!!.textDocument.uri} was changed", MessageType.Info)
+        val currentUri = params.textDocument.uri
+        checkDocument(currentUri)
     }
 
 }

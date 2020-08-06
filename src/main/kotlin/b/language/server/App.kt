@@ -16,6 +16,7 @@ fun startServer(inputStream: InputStream, outputStream: OutputStream){
     val server = Server()
     val launcher : Launcher<LanguageClient> = LSPLauncher.createServerLauncher(server, inputStream, outputStream)
     val startListing : Future<*> = launcher.startListening()
+
     server.setRemoteProxy(launcher.remoteProxy)
     startListing.get()
 }

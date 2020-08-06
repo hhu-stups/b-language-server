@@ -1,30 +1,31 @@
 package b.language.server
 
+import b.language.server.communication.Communicator
 import b.language.server.dataStorage.Settings
 import com.google.gson.JsonObject
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
-import org.eclipse.lsp4j.services.LanguageClient
-import org.eclipse.lsp4j.services.LanguageServer
-import org.eclipse.lsp4j.services.TextDocumentService
-import org.eclipse.lsp4j.services.WorkspaceService
+import org.eclipse.lsp4j.jsonrpc.services.JsonNotification
+import org.eclipse.lsp4j.services.*
 import java.util.concurrent.CompletableFuture
 import kotlin.collections.HashMap
 import kotlin.system.exitProcess
 
 
-class Server : LanguageServer {
+class Server : LanguageServer{
 
     private val textDocumentService : TextDocumentService
     private val bWorkspaceService : WorkspaceService
-    lateinit var languageClient : LanguageClient
+     lateinit var languageClient : LanguageClient
     var globalSettings : Settings = Settings()
     val documentSettings : HashMap<String, CompletableFuture<Settings>> = HashMap()
     var configurationAbility : Boolean = true
 
+
     init {
-        textDocumentService = BDocumentService(this)
+        textDocumentService = BDocumentService(this, Communicator)
         bWorkspaceService = BWorkspaceService(this)
+
     }
 
 
@@ -74,6 +75,7 @@ class Server : LanguageServer {
 
     fun setRemoteProxy(remoteProxy: LanguageClient) {
         this.languageClient = remoteProxy
+        Communicator.client = remoteProxy
     }
 
 
@@ -84,6 +86,7 @@ class Server : LanguageServer {
      * @return settings of the document requested
      */
     fun getDocumentSettings(uri : String) : CompletableFuture<Settings> {
+        Communicator.sendDebugMessage("received configuration Data of the document $uri", MessageType.Info)
         if(!configurationAbility){
             val returnValue = CompletableFuture<Settings>()
             returnValue.complete(globalSettings)
@@ -104,4 +107,6 @@ class Server : LanguageServer {
             documentSettings[uri]!!
         }
     }
+
+
 }
