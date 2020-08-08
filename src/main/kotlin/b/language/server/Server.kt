@@ -10,34 +10,28 @@ import org.eclipse.lsp4j.services.*
 import java.util.concurrent.CompletableFuture
 import kotlin.collections.HashMap
 import kotlin.system.exitProcess
-
+import org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint
 
 class Server : LanguageServer{
 
-    private val textDocumentService : TextDocumentService
-    private val bWorkspaceService : WorkspaceService
+    private val textDocumentService : TextDocumentService = BDocumentService(this, Communicator)
+    private val bWorkspaceService : WorkspaceService = BWorkspaceService(this)
      lateinit var languageClient : LanguageClient
     var globalSettings : Settings = Settings()
     val documentSettings : HashMap<String, CompletableFuture<Settings>> = HashMap()
     var configurationAbility : Boolean = true
 
 
-    init {
-        textDocumentService = BDocumentService(this, Communicator)
-        bWorkspaceService = BWorkspaceService(this)
-
-    }
-
-
     override fun initialize(params: InitializeParams?): CompletableFuture<InitializeResult> {
         val res = InitializeResult(ServerCapabilities())
         res.capabilities.textDocumentSync = Either.forLeft(TextDocumentSyncKind.Full)
+        res.capabilities.workspace = WorkspaceServerCapabilities(WorkspaceFoldersOptions())
+        res.capabilities.workspace.workspaceFolders.supported = true
+
+      //  languageClient.registerCapability(
+        //        RegistrationParams(listOf(Registration("all_config_changes", "didChangeConfiguration" , bWorkspaceService))))
 
         return CompletableFuture.supplyAsync { res }
-    }
-
-    override fun initialized(params: InitializedParams?) {
-        //languageClient.registerCapability(DidChangeConfigurationCapabilities())
     }
 
     /**
@@ -79,6 +73,9 @@ class Server : LanguageServer{
     }
 
 
+
+
+
     /**
      * Get the settings for the current document - will fallback to global settings eventually; If setting not cached
      * method will try to get setting from the client
@@ -87,17 +84,11 @@ class Server : LanguageServer{
      */
     fun getDocumentSettings(uri : String) : CompletableFuture<Settings> {
         Communicator.sendDebugMessage("received configuration Data of the document $uri", MessageType.Info)
-        if(!configurationAbility){
+        return if(!configurationAbility){
             val returnValue = CompletableFuture<Settings>()
             returnValue.complete(globalSettings)
 
-            return returnValue
-        }
-
-        // if client has configuration abilities
-        return if(documentSettings.containsKey(uri))
-        {
-            documentSettings[uri]!!
+            returnValue
         }else{
             val configurationItem = ConfigurationItem()
             configurationItem.scopeUri = uri
