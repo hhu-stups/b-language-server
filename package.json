@@ -1,0 +1,24 @@
+{
+  "name": "b-language-server",
+  "version": "1.0.0",
+  "description": "a java based language server implementing the lsp",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SeeBasTStick/b-language-server.git"
+  },
+  "keywords": [
+    "lsp",
+    "b",
+    "java"
+  ],
+  "author": "Sebastian Stock",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SeeBasTStick/b-language-server/issues"
+  },
+  "homepage": "https://github.com/SeeBasTStick/b-language-server#readme"
+}
