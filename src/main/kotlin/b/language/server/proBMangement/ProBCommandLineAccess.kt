@@ -1,6 +1,5 @@
 package b.language.server.proBMangement
 
-import b.language.server.communication.Communicator
 import b.language.server.communication.CommunicatorInterface
 import b.language.server.dataStorage.Problem
 import b.language.server.dataStorage.Settings
@@ -90,7 +89,7 @@ class ProBCommandLineAccess(val communicator : CommunicatorInterface) : ProBInte
      * @return success of the action
      */
     fun createFolder(errorDict : File, errorPath: File) : Boolean{
-        communicator.sendDebugMessage("creating errorDict $errorDict and errorFile $errorPath", MessageType.Info)
+        communicator.sendDebugMessage("creating -----huhu----- errorDict $errorDict and errorFile $errorPath", MessageType.Info)
         errorDict.mkdirs()
         FileWriter(errorPath, false).close()
         return errorDict.exists() && errorPath.exists()
@@ -99,15 +98,20 @@ class ProBCommandLineAccess(val communicator : CommunicatorInterface) : ProBInte
     /**
      * Executes the given command
      * @param command to execute
-     * @throws CommandCouldNotBeExecutedException the command failed to reach probcli
+     * @throws CommandCouldNotBeExecutedException probcli failed to execute the given command
+     * @throws IOException failed to reach probcli
      */
     fun performActionOnDocument(command : String) {
-        val process : Process = Runtime.getRuntime().exec(command)
+
+        val process: Process = Runtime.getRuntime().exec(command)
+
         val output : InputStream = process.inputStream
 
-        process.waitFor() //we must wait here to ensure correct behavior when reading an error
 
+       // process.waitFor() //we must wait here to ensure correct behavior when reading an error
+        val exitStatus = process.onExit()
         val outputAsString  = String(output.readAllBytes())
+        communicator.sendDebugMessage("output of execution + ${exitStatus.isCompletedExceptionally}", MessageType.Info)
         if(!outputAsString.contains("ProB Command Line Interface")){
             throw CommandCouldNotBeExecutedException("Error when trying to call probcli with command $command")
         }

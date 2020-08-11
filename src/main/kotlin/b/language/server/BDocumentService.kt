@@ -7,6 +7,7 @@ import b.language.server.proBMangement.ProBCommandLineAccess
 import b.language.server.proBMangement.ProBInterface
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.TextDocumentService
+import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 
 class BDocumentService(private val server: Server, private val communicator: CommunicatorInterface) : TextDocumentService {
@@ -64,8 +65,13 @@ class BDocumentService(private val server: Server, private val communicator: Com
                 communicator.sendDebugMessage("invalidating old files $invalidFiles", MessageType.Info)
                 issueTracker[currentUri] = filesWithProblems.toSet()
             }catch (e : PathCouldNotBeCreatedException ){
+                communicator.sendDebugMessage("error path could not be created", MessageType.Info)
                 communicator.showMessage(e.message!!, MessageType.Error)
             }catch (e : CommandCouldNotBeExecutedException){
+                communicator.sendDebugMessage("command could not be executed", MessageType.Info)
+                communicator.showMessage(e.message!!, MessageType.Error)
+            }catch (e : IOException){
+                communicator.sendDebugMessage("command could not be executed", MessageType.Info)
                 communicator.showMessage(e.message!!, MessageType.Error)
             }
         }
