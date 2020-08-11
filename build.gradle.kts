@@ -12,6 +12,8 @@ plugins {
     // Apply the application plugin to add support for building a CLI application.
     application
     id("com.github.johnrengelman.shadow") version "5.2.0"
+
+    id("com.palantir.git-version") version "0.12.2"
 }
 
 repositories {
@@ -42,8 +44,14 @@ dependencies {
 
 }
 
+
 tasks.test {
     useJUnitPlatform()
+}
+
+val gitVersion: groovy.lang.Closure<*> by extra
+tasks.shadowJar{
+    this.version = gitVersion().toString()
 }
 
 
