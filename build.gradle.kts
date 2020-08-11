@@ -51,7 +51,7 @@ tasks.test {
 
 val gitVersion: groovy.lang.Closure<*> by extra
 tasks.shadowJar{
-    this.version = gitVersion().toString()
+  //  this.version = gitVersion().toString()
 }
 
 
