@@ -19,6 +19,9 @@ plugins {
 repositories {
     // Use jcenter for resolving dependencies.
     jcenter()
+
+    maven("https://oss.sonatype.org/content/repositories/snapshots")
+
 }
 
 dependencies {
@@ -40,6 +43,10 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
     testImplementation("org.junit.jupiter","junit-jupiter-engine" ,  "5.7.0-M1")
+
+    implementation("de.hhu.stups:de.prob2.kernel:4.0.0-SNAPSHOT")
+
+    implementation( "com.google.guava", "guava", "28.2-jre")
 
 
 }
