@@ -1,10 +1,10 @@
 package b.language.server
 
 import b.language.server.communication.CommunicatorInterface
-import b.language.server.proBMangement.CommandCouldNotBeExecutedException
-import b.language.server.proBMangement.PathCouldNotBeCreatedException
-import b.language.server.proBMangement.ProBCommandLineAccess
+import b.language.server.proBMangement.probCli.CommandCouldNotBeExecutedException
+import b.language.server.proBMangement.probCli.PathCouldNotBeCreatedException
 import b.language.server.proBMangement.ProBInterface
+import b.language.server.proBMangement.probCli.ProBCommandLineAccess
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.TextDocumentService
 import java.io.IOException
@@ -64,7 +64,7 @@ class BDocumentService(private val server: Server, private val communicator: Com
                 invalidFiles.forEach{uri -> communicator.publishDiagnostics(PublishDiagnosticsParams(uri, listOf()))}
                 communicator.sendDebugMessage("invalidating old files $invalidFiles", MessageType.Info)
                 issueTracker[currentUri] = filesWithProblems.toSet()
-            }catch (e : PathCouldNotBeCreatedException ){
+            }catch (e : PathCouldNotBeCreatedException){
                 communicator.sendDebugMessage("error path could not be created", MessageType.Info)
                 communicator.showMessage(e.message!!, MessageType.Error)
             }catch (e : CommandCouldNotBeExecutedException){
