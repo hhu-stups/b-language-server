@@ -4,8 +4,8 @@
   "description": "a java based language server implementing the lsp",
   "main": "index.js",
   "scripts": {
-    "install:nix": "./node_modules/b-language-server/gradlew shadowjar -p ./node_modules/b-language-server",
-    "install:windows": "./node_modules/b-language-server/gradlew.bat shadowjar -p ./node_modules/b-language-server"
+    "install:nix": "./gradlew shadowjar",
+    "install:windows": "./gradlew.bat shadowjar"
   },
   "repository": {
     "type": "git",
