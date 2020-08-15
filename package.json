@@ -4,7 +4,8 @@
   "description": "a java based language server implementing the lsp",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "install:nix": "./node_modules/b-language-server/gradlew shadowjar -p ./node_modules/b-language-server",
+    "install:windows": "./node_modules/b-language-server/gradlew.bat shadowjar -p ./node_modules/b-language-server"
   },
   "repository": {
     "type": "git",
@@ -31,5 +32,9 @@
   "bugs": {
     "url": "https://github.com/SeeBasTStick/b-language-server/issues"
   },
-  "homepage": "https://github.com/SeeBasTStick/b-language-server#readme"
+  "homepage": "https://github.com/SeeBasTStick/b-language-server#readme",
+
+  "dependencies": {
+    "run-script-os": "^1.1.1"
+  }
 }
