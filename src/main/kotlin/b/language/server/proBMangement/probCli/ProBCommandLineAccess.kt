@@ -114,7 +114,7 @@ class ProBCommandLineAccess(val communicator : CommunicatorInterface) : ProBInte
                     .redirectError(ProcessBuilder.Redirect.PIPE)
 
         }catch (e : IllegalArgumentException){
-            communicator.sendDebugMessage("illegal argument exception", MessageType.Info)
+            communicator.sendDebugMessage("illegal argument exception ${e.cause}", MessageType.Info)
         }
         return ProcessBuilder()
     }
@@ -136,26 +136,20 @@ class ProBCommandLineAccess(val communicator : CommunicatorInterface) : ProBInte
     /**
      * Executes the given command
      * @param command to execute
-     * @throws CommandCouldNotBeExecutedException probcli failed to execute the given command
      * @throws IOException failed to reach probcli
      */
-    fun performActionOnDocument(command : ProcessBuilder) {
-
+    private fun performActionOnDocument(command : ProcessBuilder) {
         communicator.sendDebugMessage("execution + ${command.command()}", MessageType.Info)
 
         val process: Process = command.start()
 
-
-        val outputAsString = readFromStream(process.inputStream)
-        readFromStream(process.errorStream) //just void error
-
+        //just void error and output
+        readFromStream(process.inputStream)
+        readFromStream(process.errorStream)
 
        // process.waitFor() //we must wait here to ensure correct behavior when reading an error
         val exitStatus = process.waitFor()
         communicator.sendDebugMessage("exit status of execution: $exitStatus", MessageType.Info)
-        if(!outputAsString.contains("ProB Command Line Interface")){
-            throw CommandCouldNotBeExecutedException("Error when trying to call probcli with command $command")
-        }
     }
 
     private fun readFromStream(stream: InputStream) : String{
@@ -184,7 +178,7 @@ class ProBCommandLineAccess(val communicator : CommunicatorInterface) : ProBInte
             }
         }
 
-        val strings =  jsonStrings.toList().map { string -> Gson().fromJson(string, Problem::class.java) }
+        val strings = jsonStrings.toList().map { string -> Gson().fromJson(string, Problem::class.java) }
         return strings
 
     }
