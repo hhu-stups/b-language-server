@@ -16,7 +16,7 @@ class BWorkspaceService(private val server : Server) : WorkspaceService {
      * the client detects changes to file watched by the language client.
      */
     override fun didChangeWatchedFiles(params: DidChangeWatchedFilesParams?) {
-        Communicator.sendDebugMessage("----------changed watched files", MessageType.Info)
+        Communicator.bufferDebugMessage("changed watched files", MessageType.Info)
 
         // Not needed
     }
@@ -26,7 +26,7 @@ class BWorkspaceService(private val server : Server) : WorkspaceService {
      * configuration settings.
      */
     override fun didChangeConfiguration(params: DidChangeConfigurationParams?) {
-        Communicator.sendDebugMessage("received change in configuration settings", MessageType.Info)
+        Communicator.bufferDebugMessage("received change in configuration settings", MessageType.Info)
         if(server.configurationAbility) {
             server.documentSettings.clear()
         }else{

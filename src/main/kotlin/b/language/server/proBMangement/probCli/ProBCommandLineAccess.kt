@@ -64,7 +64,8 @@ class ProBCommandLineAccess(val communicator : CommunicatorInterface) : ProBInte
         val typeCheckDefinitions = "TYPE_CHECK_DEFINITIONS"
         val lint = "-lint"
         val tRUE = "TRUE"
-        val performanceHints = "PERFORMANCE_INFO"
+        val performanceHints = "" +
+                "PERFORMANCE_INFO"
 
 
         val command = mutableListOf<String>()
@@ -113,7 +114,7 @@ class ProBCommandLineAccess(val communicator : CommunicatorInterface) : ProBInte
                     .redirectError(ProcessBuilder.Redirect.PIPE)
 
         }catch (e : IllegalArgumentException){
-            communicator.sendDebugMessage("illigal argument exception", MessageType.Info)
+            communicator.sendDebugMessage("illegal argument exception", MessageType.Info)
         }
         return ProcessBuilder()
     }
@@ -144,16 +145,14 @@ class ProBCommandLineAccess(val communicator : CommunicatorInterface) : ProBInte
 
         val process: Process = command.start()
 
-     //   val output  = InputStreamReader(process.inputStream)
-     //   val error  = InputStreamReader(process.errorStream)
 
         val outputAsString = readFromStream(process.inputStream)
-        readFromStream(process.errorStream)
+        readFromStream(process.errorStream) //just void error
 
 
        // process.waitFor() //we must wait here to ensure correct behavior when reading an error
         val exitStatus = process.waitFor()
-        communicator.sendDebugMessage("output of execution + ${exitStatus}", MessageType.Info)
+        communicator.sendDebugMessage("exit status of execution: $exitStatus", MessageType.Info)
         if(!outputAsString.contains("ProB Command Line Interface")){
             throw CommandCouldNotBeExecutedException("Error when trying to call probcli with command $command")
         }
