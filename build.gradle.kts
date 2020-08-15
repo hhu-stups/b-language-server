@@ -13,7 +13,7 @@ plugins {
     application
     id("com.github.johnrengelman.shadow") version "5.2.0"
 
-    id("com.palantir.git-version") version "0.12.2"
+ //   id("com.palantir.git-version") version "0.12.2"
 }
 
 repositories {
