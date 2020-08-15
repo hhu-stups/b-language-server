@@ -38,4 +38,12 @@ interface CommunicatorInterface {
      * @param mode the new state of the debug mode
      */
     fun setDebugMode(mode : Boolean)
+
+
+    /**
+     * Can be used to store a messages until a "sendDebugMessage" command is sent. The messages will be sent as FIFO
+     * @param message the message to send
+     * @param severity tne message severity
+     */
+    fun bufferDebugMessage(message : String, severity: MessageType)
 }

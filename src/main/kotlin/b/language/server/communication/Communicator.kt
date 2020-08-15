@@ -15,6 +15,7 @@ object Communicator : CommunicatorInterface {
     lateinit var client : LanguageClient
 
     private var debugMode : Boolean = true
+    private val storedMessages = mutableListOf<Pair<String, MessageType>>()
 
     /**
      * Sends the diagnostics
@@ -32,7 +33,13 @@ object Communicator : CommunicatorInterface {
      * @param severity the Severity of the message (Error/Info/Warning)
      */
     override fun sendDebugMessage(message: String, severity: MessageType) {
+
+
         if(debugMode) {
+            if(storedMessages.isNotEmpty()) {
+                storedMessages.toList().forEach { element -> client.logMessage(MessageParams(element.second, element.first)) }
+                storedMessages.clear()
+            }
             client.logMessage(MessageParams(severity, message))
         }
 
@@ -57,4 +64,17 @@ object Communicator : CommunicatorInterface {
     override fun setDebugMode(mode : Boolean){
         debugMode = mode
     }
+
+    /**
+     * Can be used to store a messages until a "sendDebugMessage" command is sent. The messages will be sent as FIFO
+     * @param message the message to send
+     * @param severity tne message severity
+     */
+    override fun bufferDebugMessage(message: String, severity: MessageType) {
+        if(debugMode) {
+            storedMessages.add(Pair(message, severity))
+        }
+    }
+
+
 }

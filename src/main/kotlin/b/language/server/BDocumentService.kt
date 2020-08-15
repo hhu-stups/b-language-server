@@ -35,7 +35,7 @@ class BDocumentService(private val server: Server, private val communicator: Com
      */
     override fun didSave(params: DidSaveTextDocumentParams?) {
 
-        communicator.sendDebugMessage("document ${params!!.textDocument.uri} was saved", MessageType.Info)
+        communicator.bufferDebugMessage("document ${params!!.textDocument.uri} was saved", MessageType.Info)
         val currentUri = params.textDocument.uri
         checkDocument(currentUri)
 
@@ -48,7 +48,7 @@ class BDocumentService(private val server: Server, private val communicator: Com
     fun checkDocument(currentUri : String){
 
         val clientSettings = server.getDocumentSettings(currentUri)
-        communicator.sendDebugMessage("waiting for document settings", MessageType.Info)
+        communicator.bufferDebugMessage("waiting for document settings", MessageType.Info)
 
         clientSettings.thenAccept{ settings ->
             communicator.setDebugMode(settings.debugMode)
@@ -80,7 +80,7 @@ class BDocumentService(private val server: Server, private val communicator: Com
 
     /**
      * Gets all uris that are no longer contain problems
-     * @param currentUri the uri of the curre   nt main file
+     * @param currentUri the uri of the current main file
      * @param filesWithProblems uris of files containing problems
      */
     fun calculateToInvalidate(currentUri : String, filesWithProblems : List<String>) : List<String>{
@@ -108,7 +108,7 @@ class BDocumentService(private val server: Server, private val communicator: Com
      * Registration Options: TextDocumentChangeRegistrationOptions
      */
     override fun didChange(params: DidChangeTextDocumentParams?) {
-        communicator.sendDebugMessage("document ${params!!.textDocument.uri} was changed", MessageType.Info)
+        communicator.bufferDebugMessage("document ${params!!.textDocument.uri} was changed", MessageType.Info)
         val currentUri = params.textDocument.uri
         checkDocument(currentUri)
     }

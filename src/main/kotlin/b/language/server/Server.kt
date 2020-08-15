@@ -83,7 +83,7 @@ class Server : LanguageServer{
      * @return settings of the document requested
      */
     fun getDocumentSettings(uri : String) : CompletableFuture<Settings> {
-        Communicator.sendDebugMessage("received configuration Data of the document $uri", MessageType.Info)
+        Communicator.bufferDebugMessage("received configuration data of the document $uri", MessageType.Info)
         return if(!configurationAbility){
             val returnValue = CompletableFuture<Settings>()
             returnValue.complete(globalSettings)
