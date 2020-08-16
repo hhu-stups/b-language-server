@@ -131,6 +131,8 @@ class ProBCommandLineAccess(val communicator : CommunicatorInterface) : ProBInte
         communicator.sendDebugMessage("creating errorDict $errorDict and errorFile $errorPath", MessageType.Info)
         errorDict.mkdirs()
         FileWriter(errorPath, false).close()
+        errorPath.deleteOnExit()
+        errorDict.deleteOnExit()
         return errorDict.exists() && errorPath.exists()
     }
 
@@ -218,13 +220,13 @@ class ProBCommandLineAccess(val communicator : CommunicatorInterface) : ProBInte
                 problem
             }
         }
-                .map { problem -> Diagnostic(
-                        Range(
+                .map { problem ->
+                        val range = Range(
                                 Position(problem.start.line, problem.start.col),
-                                Position(problem.end.line, problem.end.col)),
-
+                                Position(problem.end.line, problem.end.col))
+                        val diagnostic = Diagnostic(
+                        range,
                         problem.message,
-
                         when (problem.type) {
                             "error" -> {
                                 DiagnosticSeverity.Error
@@ -239,9 +241,12 @@ class ProBCommandLineAccess(val communicator : CommunicatorInterface) : ProBInte
                                 DiagnosticSeverity.Hint
                             }
                         },
-                        problem.file,
-                        " probcli v.${problem.version}"
+                        problem.file
                         )
+                    diagnostic.relatedInformation =
+                            listOf(DiagnosticRelatedInformation(Location(problem.file, range), "probcli v.${problem.version}"))
+                    diagnostic
+
                 }
     }
 }
