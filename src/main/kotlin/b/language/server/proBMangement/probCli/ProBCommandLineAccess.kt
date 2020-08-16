@@ -37,6 +37,8 @@ class ProBCommandLineAccess(val communicator : CommunicatorInterface) : ProBInte
         performActionOnDocument(command)
 
         val problems = readProblems(errorPath.path)
+        communicator.sendDebugMessage("deleting tmp", MessageType.Info )
+        errorDict.delete()
         communicator.sendDebugMessage("found the following problems: $problems", MessageType.Info)
 
         return transformProblems(problems)
@@ -91,7 +93,6 @@ class ProBCommandLineAccess(val communicator : CommunicatorInterface) : ProBInte
             command.add(additionalArgument)
             command.add(typeCheckDefinitions)
             command.add(tRUE)
-            command.add(additionalArgument)
             command.add(lint)
         }
 
@@ -238,8 +239,8 @@ class ProBCommandLineAccess(val communicator : CommunicatorInterface) : ProBInte
                                 DiagnosticSeverity.Hint
                             }
                         },
-                        problem.file
-                        //code =  " probcli v.${problem.version}"
+                        problem.file,
+                        " probcli v.${problem.version}"
                         )
                 }
     }
