@@ -13,6 +13,6 @@ class MyWarningListener : IWarningListener {
     }
 
     fun getWarnings() : List<Diagnostic>{
-        return convertErrorItems(warningList, DiagnosticSeverity.Warning)
+        return convertErrorItems(warningList)
     }
 }

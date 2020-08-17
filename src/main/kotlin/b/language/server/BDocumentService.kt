@@ -1,16 +1,16 @@
 package b.language.server
 
 import b.language.server.communication.CommunicatorInterface
-import b.language.server.proBMangement.probCli.CommandCouldNotBeExecutedException
-import b.language.server.proBMangement.probCli.PathCouldNotBeCreatedException
-import b.language.server.proBMangement.probCli.ProBCommandLineAccess
+import b.language.server.proBMangement.ProBFactory
 import b.language.server.proBMangement.ProBInterface
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.TextDocumentService
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 
-class BDocumentService(private val server: Server, private val communicator: CommunicatorInterface) : TextDocumentService {
+class BDocumentService(private val server: Server,
+                       private val communicator: CommunicatorInterface,
+                       private val proBFactory: ProBFactory = ProBFactory()) : TextDocumentService {
 
     private val documents = ConcurrentHashMap<String, String>()
     private val issueTracker : ConcurrentHashMap<String, Set<String>> = ConcurrentHashMap()
@@ -43,7 +43,7 @@ class BDocumentService(private val server: Server, private val communicator: Com
 
     /**
      * checks a document via prob an the set options
-     * @param the uri to perform actions on
+     * @param currentUri uri to perform actions on
      */
     fun checkDocument(currentUri : String){
 
@@ -52,7 +52,7 @@ class BDocumentService(private val server: Server, private val communicator: Com
 
         clientSettings.thenAccept{ settings ->
             communicator.setDebugMode(settings.debugMode)
-            val prob : ProBInterface = ProBCommandLineAccess(communicator)
+            val prob : ProBInterface = proBFactory.getProBAccess(communicator)
             communicator.sendDebugMessage("settings are $settings", MessageType.Info)
 
             try{
@@ -64,12 +64,6 @@ class BDocumentService(private val server: Server, private val communicator: Com
                 invalidFiles.forEach{uri -> communicator.publishDiagnostics(PublishDiagnosticsParams(uri, listOf()))}
                 communicator.sendDebugMessage("invalidating old files $invalidFiles", MessageType.Info)
                 issueTracker[currentUri] = filesWithProblems.toSet()
-            }catch (e : PathCouldNotBeCreatedException){
-                communicator.sendDebugMessage("error path could not be created", MessageType.Info)
-                communicator.showMessage(e.message!!, MessageType.Error)
-            }catch (e : CommandCouldNotBeExecutedException){
-                communicator.sendDebugMessage("command could not be executed", MessageType.Info)
-                communicator.showMessage(e.message!!, MessageType.Error)
             }catch (e : IOException){
                 communicator.sendDebugMessage("command could not be executed", MessageType.Info)
                 communicator.showMessage(e.message!!, MessageType.Error)

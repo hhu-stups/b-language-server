@@ -8,8 +8,9 @@ interface ProBInterface {
     /**
      * Checks the given document with the help of ProB
      * @param uri the source to check
+     * @param settings the settings for this document
      * @return a list of all problems found
      */
-    abstract fun checkDocument(uri : String, settings: Settings) : List<Diagnostic>
+    fun checkDocument(uri : String, settings: Settings) : List<Diagnostic>
 
 }

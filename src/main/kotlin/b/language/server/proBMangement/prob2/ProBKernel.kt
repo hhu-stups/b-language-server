@@ -1,4 +1,5 @@
 
+import b.language.server.communication.Communicator
 import b.language.server.dataStorage.ProBSettings
 import b.language.server.proBMangement.prob2.MyWarningListener
 import b.language.server.proBMangement.prob2.convertErrorItems
@@ -14,14 +15,40 @@ import de.prob.statespace.AnimationSelector
 import de.prob.statespace.StateSpace
 import de.prob.statespace.Trace
 import org.eclipse.lsp4j.Diagnostic
-import org.eclipse.lsp4j.DiagnosticSeverity
+import org.eclipse.lsp4j.MessageType
 import java.io.IOException
-import java.nio.file.Paths
 
 
 class ProBKernel @Inject constructor(private val injector : Injector, val classicalBFactory : ClassicalBFactory,
                                      private val animationSelector: AnimationSelector, private val animator : ReusableAnimator) {
 
+    private val communicator : Communicator = Communicator
+
+    fun check(path : String, settings : ProBSettings) : List<Diagnostic>{
+        communicator.sendDebugMessage("Unload old machine", MessageType.Info)
+        unloadMachine()
+        val factory = injector.getInstance(FactoryProvider.factoryClassFromExtension(path.substringAfterLast(".")))
+        val warningListener = MyWarningListener()
+        animator.addWarningListener(warningListener)
+        val parseErrors = mutableListOf<Diagnostic>()
+        communicator.sendDebugMessage("Load new machine", MessageType.Info)
+        loadMachine(
+                java.util.function.Function { stateSpace : StateSpace ->
+                    try {
+                        val extractedModel = factory.extract(path)
+                        val stateSpaceWithSettings = extractedModel.load(prepareAdditionalSettings(settings))
+                        extractedModel.loadIntoStateSpace(stateSpaceWithSettings)
+                    } catch (e: IOException) {
+                        throw RuntimeException(e)
+                    } catch (e: ModelTranslationError) {
+                        throw RuntimeException(e)
+                    }catch (e : ProBError){
+                        parseErrors.addAll(convertErrorItems(e.errors))
+                    }
+                    Trace(stateSpace)
+                }, settings)
+        return listOf(warningListener.getWarnings(), parseErrors).flatten()
+    }
 
     private fun loadMachine(newTraceCreator :java.util.function.Function<StateSpace, Trace>, settings: ProBSettings){
         val newStateSpace = animator.createStateSpace()
@@ -35,7 +62,7 @@ class ProBKernel @Inject constructor(private val injector : Injector, val classi
     }
 
     private fun executeAdditionalOptions(settings : ProBSettings){
-        val newStateSpace = animator.createStateSpace()
+        animator.createStateSpace()
         if(settings.wdChecks){
             animator.execute(CheckWellDefinednessCommand())
         }
@@ -51,30 +78,8 @@ class ProBKernel @Inject constructor(private val injector : Injector, val classi
         }
     }
 
-    fun check(path : String, settings : ProBSettings) : List<Diagnostic>{
-        unloadMachine()
-        val factory = injector.getInstance(FactoryProvider.factoryClassFromExtension(path.substringAfterLast(".")))
-        val warningListener = MyWarningListener()
-        animator.addWarningListener(warningListener)
-        val parseErrors = mutableListOf<Diagnostic>()
-        loadMachine(
-                java.util.function.Function { stateSpace : StateSpace ->
-                    try {
-                        factory.extract(path).load(prepareAdditionalSettings(settings))
-                        loadIntoStateSpace(stateSpace)
-                    } catch (e: IOException) {
-                        throw RuntimeException(e)
-                    } catch (e: ModelTranslationError) {
-                        throw RuntimeException(e)
-                    }catch (e : ProBError){
-                        parseErrors.addAll(convertErrorItems(e.errors))
-                    }
-                    Trace(stateSpace)
-                }, settings)
-        return listOf(warningListener.getWarnings(), parseErrors).flatten()
-    }
 
-    fun prepareAdditionalSettings(proBSettings: ProBSettings): MutableMap<String, String> {
+    private fun prepareAdditionalSettings(proBSettings: ProBSettings): MutableMap<String, String> {
         val settings = mutableMapOf<String, String>()
         if(proBSettings.performanceHints) {
             settings["STRICT_CLASH_CHECKING"] = "TRUE"

@@ -5,12 +5,10 @@ import b.language.server.dataStorage.Settings
 import com.google.gson.JsonObject
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
-import org.eclipse.lsp4j.jsonrpc.services.JsonNotification
 import org.eclipse.lsp4j.services.*
 import java.util.concurrent.CompletableFuture
 import kotlin.collections.HashMap
 import kotlin.system.exitProcess
-import org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint
 
 class Server : LanguageServer{
 
