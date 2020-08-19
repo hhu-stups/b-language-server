@@ -7,10 +7,12 @@ import b.language.server.dataStorage.ProBSettings
 import b.language.server.dataStorage.Settings
 import b.language.server.proBMangement.ProBInterface
 import b.language.server.proBMangement.WrongPathException
+import com.google.inject.CreationException
 import com.google.inject.Guice
 import com.google.inject.Stage
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.MessageType
+import kotlin.concurrent.thread
 
 /**
  * Setup a connection to ProB2 Kernel
@@ -46,14 +48,22 @@ class ProBKernelManager(private val communicator : CommunicatorInterface) : ProB
      * @return an instance of prob kernel
      */
     fun setup(probHome : String) : ProBKernel{
-        if(probHome != "DEFAULT"){
+        if(false){
             System.setProperty("prob.home", probHome)
             communicator.sendDebugMessage("$probHome selected", MessageType.Info)
         }else{
             communicator.sendDebugMessage("default prob selected", MessageType.Info)
         }
 
-        val injector = Guice.createInjector(Stage.PRODUCTION, ProBKernelModule())
+        communicator.sendDebugMessage("creating injector...", MessageType.Info)
+        System.err.println((communicator as Communicator).client.toString())
+        val injector =
+            Guice.createInjector(Stage.PRODUCTION, ProBKernelModule())
+
+        communicator.sendDebugMessage("..done", MessageType.Info)
+        System.err.println((communicator as Communicator).client.toString())
+
+
         val kernel : ProBKernel
         try{
             kernel = injector.getInstance(ProBKernel::class.java)
@@ -61,8 +71,14 @@ class ProBKernelManager(private val communicator : CommunicatorInterface) : ProB
             communicator.sendDebugMessage("wrong path to prob", MessageType.Error)
             throw WrongPathException("wrong path to prob $probHome")
         }
+        communicator.sendDebugMessage("returning kernel", MessageType.Info)
+
         return kernel
     }
 
+
+    class Test() : Thread(){
+
+    }
 
 }

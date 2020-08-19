@@ -1,5 +1,6 @@
 
 import b.language.server.communication.Communicator
+import b.language.server.communication.CommunicatorInterface
 import b.language.server.dataStorage.ProBSettings
 import b.language.server.proBMangement.prob2.MyWarningListener
 import b.language.server.proBMangement.prob2.convertErrorItems
@@ -20,10 +21,13 @@ import java.io.IOException
 
 
 class ProBKernel @Inject constructor(private val injector : Injector, val classicalBFactory : ClassicalBFactory,
-                                     private val animationSelector: AnimationSelector, private val animator : ReusableAnimator) {
+                                     private val animationSelector: AnimationSelector,
+                                     private val animator : ReusableAnimator
+                              //       private val communicator: Communicator
+) {
 
-    private val communicator : Communicator = Communicator
 
+    val communicator = Communicator
     fun check(path : String, settings : ProBSettings) : List<Diagnostic>{
         communicator.sendDebugMessage("Unload old machine", MessageType.Info)
         unloadMachine()

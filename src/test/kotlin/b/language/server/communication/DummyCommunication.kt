@@ -9,7 +9,7 @@ import org.eclipse.lsp4j.PublishDiagnosticsParams
  * The Communicator is a side effect class, we don´t want side effects in out tests; especially such that are for
  * debug purpose only
  */
-class DummyCommunication : CommunicatorInterface {
+class DummyCommunication() : CommunicatorInterface {
 
     val outputCollector = mutableListOf<String>()
 
@@ -44,6 +44,14 @@ class DummyCommunication : CommunicatorInterface {
      * @param mode the new state of the debug mode
      */
     override fun setDebugMode(mode: Boolean) {
-
+        TODO("Not yet implemented")
     }
+
+    /**
+     * To enable/disable debug mode
+     *
+     * @param mode the new state of the debug mode
+     */
+
+
 }
