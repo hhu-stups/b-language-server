@@ -1,9 +1,10 @@
 
+import b.language.server.communication.CommunicationCollector
 import b.language.server.communication.Communicator
 import b.language.server.communication.CommunicatorInterface
 import b.language.server.dataStorage.ProBSettings
-import b.language.server.proBMangement.prob2.MyWarningListener
-import b.language.server.proBMangement.prob2.convertErrorItems
+import b.language.server.proBMangement.prob.MyWarningListener
+import b.language.server.proBMangement.prob.convertErrorItems
 import com.google.inject.Inject
 import com.google.inject.Injector
 import de.prob.animator.ReusableAnimator
@@ -22,36 +23,39 @@ import java.io.IOException
 
 class ProBKernel @Inject constructor(private val injector : Injector, val classicalBFactory : ClassicalBFactory,
                                      private val animationSelector: AnimationSelector,
-                                     private val animator : ReusableAnimator
-                              //       private val communicator: Communicator
-) {
+                                     private val animator : ReusableAnimator) {
 
 
-    val communicator = Communicator
-    fun check(path : String, settings : ProBSettings) : List<Diagnostic>{
-        communicator.sendDebugMessage("Unload old machine", MessageType.Info)
+    val communicator = CommunicationCollector()
+    fun check(path : String, settings : ProBSettings) : Pair<List<Diagnostic>, List<Pair<String, MessageType>>>{
+        communicator.log.clear()
+
+        Communicator.sendDebugMessage("Unload old machine", MessageType.Info)
         unloadMachine()
         val factory = injector.getInstance(FactoryProvider.factoryClassFromExtension(path.substringAfterLast(".")))
         val warningListener = MyWarningListener()
         animator.addWarningListener(warningListener)
         val parseErrors = mutableListOf<Diagnostic>()
-        communicator.sendDebugMessage("Load new machine", MessageType.Info)
+        Communicator.sendDebugMessage("Load new machine", MessageType.Info)
         loadMachine(
-                java.util.function.Function { stateSpace : StateSpace ->
+                { stateSpace : StateSpace ->
                     try {
                         val extractedModel = factory.extract(path)
                         val stateSpaceWithSettings = extractedModel.load(prepareAdditionalSettings(settings))
                         extractedModel.loadIntoStateSpace(stateSpaceWithSettings)
                     } catch (e: IOException) {
-                        throw RuntimeException(e)
+                      //  throw RuntimeException(e)
+                        communicator.sendDebugMessage("IOException ${e.message}", MessageType.Info)
                     } catch (e: ModelTranslationError) {
-                        throw RuntimeException(e)
+                        communicator.sendDebugMessage("ModelTranslationError ${e.message}", MessageType.Info)
+
+                        //  throw RuntimeException(e)
                     }catch (e : ProBError){
                         parseErrors.addAll(convertErrorItems(e.errors))
                     }
                     Trace(stateSpace)
                 }, settings)
-        return listOf(warningListener.getWarnings(), parseErrors).flatten()
+        return Pair(listOf(warningListener.getWarnings(), parseErrors).flatten(), communicator.log)
     }
 
     private fun loadMachine(newTraceCreator :java.util.function.Function<StateSpace, Trace>, settings: ProBSettings){
@@ -66,7 +70,7 @@ class ProBKernel @Inject constructor(private val injector : Injector, val classi
     }
 
     private fun executeAdditionalOptions(settings : ProBSettings){
-        animator.createStateSpace()
+       // animator.createStateSpace()
         if(settings.wdChecks){
             animator.execute(CheckWellDefinednessCommand())
         }

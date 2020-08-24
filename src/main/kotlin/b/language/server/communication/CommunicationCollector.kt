@@ -1,28 +1,18 @@
 package b.language.server.communication
 
-import org.eclipse.lsp4j.MessageParams
 import org.eclipse.lsp4j.MessageType
 import org.eclipse.lsp4j.PublishDiagnosticsParams
-import org.eclipse.lsp4j.services.LanguageClient
 
+class CommunicationCollector : CommunicatorInterface {
 
-object Communicator : CommunicatorInterface {
-
-
-    /**
-     * Will be set in the server an encapsulates the client
-     */
-    lateinit var client : LanguageClient
-
-    private var debugMode : Boolean = true
-
+    val log : MutableList<Pair<String, MessageType>> = mutableListOf()
     /**
      * Sends the diagnostics
      *
      * @param diagnostics object containing the Diagnostics
      */
     override fun publishDiagnostics(diagnostics: PublishDiagnosticsParams) {
-        client.publishDiagnostics(diagnostics)
+        TODO("Not yet implemented")
     }
 
     /**
@@ -32,11 +22,7 @@ object Communicator : CommunicatorInterface {
      * @param severity the Severity of the message (Error/Info/Warning)
      */
     override fun sendDebugMessage(message: String, severity: MessageType) {
-        if(debugMode) {
-            System.err.println("Debug messages $message")
-            client.logMessage(MessageParams(severity, message))
-        }
-
+        log.add(Pair(message, severity))
     }
 
     /**
@@ -46,16 +32,15 @@ object Communicator : CommunicatorInterface {
      * @param severity the Severity of the message (Error/Info/Warning)
      */
     override fun showMessage(message: String, severity: MessageType) {
-        client.showMessage(MessageParams(severity, message))
+        TODO("Not yet implemented")
     }
-
 
     /**
      * To enable/disable debug mode
      *
      * @param mode the new state of the debug mode
      */
-    override fun setDebugMode(mode : Boolean){
-        debugMode = mode
+    override fun setDebugMode(mode: Boolean) {
+        TODO("Not yet implemented")
     }
 }

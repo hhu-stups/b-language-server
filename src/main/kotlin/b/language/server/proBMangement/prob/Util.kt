@@ -1,4 +1,4 @@
-package b.language.server.proBMangement.prob2
+package b.language.server.proBMangement.prob
 
 import de.prob.animator.domainobjects.ErrorItem
 import org.eclipse.lsp4j.Diagnostic

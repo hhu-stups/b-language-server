@@ -2,6 +2,8 @@ package b.language.server
 
 import b.language.server.communication.Communicator
 import b.language.server.dataStorage.Settings
+import b.language.server.proBMangement.prob.ProBKernelConnector
+import b.language.server.proBMangement.prob.ProBKernelManager
 import com.google.gson.JsonObject
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
@@ -10,14 +12,16 @@ import java.util.concurrent.CompletableFuture
 import kotlin.collections.HashMap
 import kotlin.system.exitProcess
 
-class Server : LanguageServer{
+class Server() : LanguageServer{
 
-    private val textDocumentService : TextDocumentService = BDocumentService(this, Communicator)
+    private val textDocumentService : TextDocumentService = BDocumentService(this, Communicator, ProBKernelConnector(Communicator))
     private val bWorkspaceService : WorkspaceService = BWorkspaceService(this)
      lateinit var languageClient : LanguageClient
     var globalSettings : Settings = Settings()
     val documentSettings : HashMap<String, CompletableFuture<Settings>> = HashMap()
     var configurationAbility : Boolean = true
+
+
 
 
     override fun initialize(params: InitializeParams?): CompletableFuture<InitializeResult> {
@@ -91,11 +95,15 @@ class Server : LanguageServer{
             val configurationItem = ConfigurationItem()
             configurationItem.scopeUri = uri
             configurationItem.section = "languageServer"
+
             val requestedConfig = languageClient.configuration(ConfigurationParams(listOf(configurationItem)))
             documentSettings[uri] = CompletableFuture.allOf(requestedConfig).thenApply{ castJsonToSetting(requestedConfig.get().first() as JsonObject) }
             documentSettings[uri]!!
         }
     }
+
+
+
 
 
 }

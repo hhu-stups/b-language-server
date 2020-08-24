@@ -32,7 +32,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
 
-  //  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9")
 
 
     // eclipse lsp implementation
@@ -51,6 +51,10 @@ dependencies {
     implementation("de.hhu.stups:de.prob2.kernel:4.0.0-SNAPSHOT")
 
     implementation( "com.google.guava", "guava", "28.2-jre")
+
+
+    // https://mvnrepository.com/artifact/org.zeromq/jeromq
+    implementation ("org.zeromq",   "jeromq", "0.5.2")
 
 
 }

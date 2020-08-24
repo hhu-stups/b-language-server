@@ -1,7 +1,6 @@
 package b.language.server
 
 import b.language.server.communication.CommunicatorInterface
-import b.language.server.proBMangement.ProBFactory
 import b.language.server.proBMangement.ProBInterface
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.TextDocumentService
@@ -10,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 class BDocumentService(private val server: Server,
                        private val communicator: CommunicatorInterface,
-                       private val proBFactory: ProBFactory = ProBFactory()) : TextDocumentService {
+                        private val proBInterface: ProBInterface) : TextDocumentService {
 
     private val documents = ConcurrentHashMap<String, String>()
     private val issueTracker : ConcurrentHashMap<String, Set<String>> = ConcurrentHashMap()
@@ -52,11 +51,10 @@ class BDocumentService(private val server: Server,
 
         clientSettings.thenAccept{ settings ->
             communicator.setDebugMode(settings.debugMode)
-            val prob : ProBInterface = proBFactory.getProBAccess(communicator)
             communicator.sendDebugMessage("settings are $settings", MessageType.Info)
 
             try{
-                val diagnostics: List<Diagnostic> = prob.checkDocument(currentUri, settings)
+                val diagnostics: List<Diagnostic> = proBInterface.checkDocument(currentUri, settings)
                 communicator.sendDebugMessage("created diagnostics $diagnostics", MessageType.Info)
                 communicator.publishDiagnostics(PublishDiagnosticsParams(currentUri, diagnostics))
                 val filesWithProblems = diagnostics.map { diagnostic -> diagnostic.source }
