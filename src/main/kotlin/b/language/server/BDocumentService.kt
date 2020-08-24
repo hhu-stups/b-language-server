@@ -59,6 +59,7 @@ class BDocumentService(private val server: Server, private val communicator: Com
                 val diagnostics: List<Diagnostic> = prob.checkDocument(currentUri, settings)
                 communicator.sendDebugMessage("created diagnostics $diagnostics", MessageType.Info)
                 communicator.publishDiagnostics(PublishDiagnosticsParams(currentUri, diagnostics))
+                communicator.showMessage("Evaluation done - ${diagnostics.size} problem(s)", MessageType.Log)
                 val filesWithProblems = diagnostics.map { diagnostic -> diagnostic.source }
                 val invalidFiles = calculateToInvalidate(currentUri, filesWithProblems)
                 invalidFiles.forEach{uri -> communicator.publishDiagnostics(PublishDiagnosticsParams(uri, listOf()))}
