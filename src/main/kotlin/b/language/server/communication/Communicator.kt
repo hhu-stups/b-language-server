@@ -1,5 +1,6 @@
 package b.language.server.communication
 
+import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.MessageParams
 import org.eclipse.lsp4j.MessageType
 import org.eclipse.lsp4j.PublishDiagnosticsParams
@@ -22,8 +23,8 @@ object Communicator : CommunicatorInterface {
      *
      * @param diagnostics object containing the Diagnostics
      */
-    override fun publishDiagnostics(diagnostics: PublishDiagnosticsParams) {
-        client.publishDiagnostics(diagnostics)
+    override fun publishDiagnostics(target :String, diagnostics : List<Diagnostic>) {
+        client.publishDiagnostics(PublishDiagnosticsParams(target, diagnostics))
     }
 
     /**

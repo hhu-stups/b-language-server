@@ -1,5 +1,6 @@
 package b.language.server.communication
 
+import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.MessageType
 import org.eclipse.lsp4j.PublishDiagnosticsParams
 
@@ -13,7 +14,7 @@ interface CommunicatorInterface {
      *
      * @param diagnostics object containing the Diagnostics
      */
-    fun publishDiagnostics(diagnostics : PublishDiagnosticsParams)
+    fun publishDiagnostics(target :String, diagnostics : List<Diagnostic>)
 
     /**
      * Sends a debug message resulting in a output channel message

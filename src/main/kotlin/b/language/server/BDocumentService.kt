@@ -8,6 +8,7 @@ import b.language.server.proBMangement.probCli.ProBCommandLineAccess
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.TextDocumentService
 import java.io.IOException
+import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 
 class BDocumentService(private val server: Server, private val communicator: CommunicatorInterface) : TextDocumentService {
@@ -57,14 +58,17 @@ class BDocumentService(private val server: Server, private val communicator: Com
 
             try{
                 val diagnostics: List<Diagnostic> = prob.checkDocument(currentUri, settings)
-                communicator.sendDebugMessage("created diagnostics $diagnostics", MessageType.Info)
-                communicator.publishDiagnostics(PublishDiagnosticsParams(currentUri, diagnostics))
-                communicator.showMessage("Evaluation done - ${diagnostics.size} problem(s)", MessageType.Log)
-                val filesWithProblems = diagnostics.map { diagnostic -> diagnostic.source }
+
+                val sortedDiagnostic = diagnostics.groupBy { it.source }
+                sortedDiagnostic.forEach { entry -> communicator.publishDiagnostics(entry.key, entry.value)}
+                communicator.showMessage("Evaluation done: ${diagnostics.size} problem(s)", MessageType.Log)
+
+                val filesWithProblems = sortedDiagnostic.keys.toList()
                 val invalidFiles = calculateToInvalidate(currentUri, filesWithProblems)
-                invalidFiles.forEach{uri -> communicator.publishDiagnostics(PublishDiagnosticsParams(uri, listOf()))}
+                invalidFiles.forEach{uri -> communicator.publishDiagnostics(uri, listOf())}
                 communicator.sendDebugMessage("invalidating old files $invalidFiles", MessageType.Info)
                 issueTracker[currentUri] = filesWithProblems.toSet()
+
             }catch (e : PathCouldNotBeCreatedException){
                 communicator.sendDebugMessage("error path could not be created", MessageType.Info)
                 communicator.showMessage(e.message!!, MessageType.Error)
