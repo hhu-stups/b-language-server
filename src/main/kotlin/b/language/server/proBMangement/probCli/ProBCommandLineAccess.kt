@@ -70,7 +70,16 @@ class ProBCommandLineAccess(val communicator : CommunicatorInterface) : ProBInte
                 "PERFORMANCE_INFO"
 
 
+        val outputSink = if(System.getProperty("os.name").toLowerCase().contains("win")){
+            File("NUL")
+        }else{
+            File("/dev/null")
+        }
+
+        communicator.sendDebugMessage("voiding err and output to: ${outputSink.absolutePath}", MessageType.Info)
+
         val command = mutableListOf<String>()
+
 
         command.add(settings.probHome.absolutePath)
         command.add(additionalArgument)
@@ -106,13 +115,14 @@ class ProBCommandLineAccess(val communicator : CommunicatorInterface) : ProBInte
         command.add(fileToCheck.absolutePath)
 
 
+
         communicator.sendDebugMessage("creating cli call $command", MessageType.Info)
 
         try {
             return ProcessBuilder()
                     .command(command)
-                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                    .redirectError(ProcessBuilder.Redirect.PIPE)
+                    .redirectOutput(outputSink)
+                    .redirectError(outputSink)
 
         }catch (e : IllegalArgumentException){
             communicator.sendDebugMessage("illegal argument exception ${e.cause}", MessageType.Info)
@@ -142,28 +152,66 @@ class ProBCommandLineAccess(val communicator : CommunicatorInterface) : ProBInte
      * @throws IOException failed to reach probcli
      */
     private fun performActionOnDocument(command : ProcessBuilder) {
-        communicator.sendDebugMessage("execution + ${command.command()}", MessageType.Info)
+        communicator.sendDebugMessage("execution of ${command.command()}", MessageType.Info)
 
         val process: Process = command.start()
 
         //just void error and output
-        readFromStream(process.inputStream)
-        readFromStream(process.errorStream)
+            communicator.sendDebugMessage("clearing input stream", MessageType.Info)
 
-       // process.waitFor() //we must wait here to ensure correct behavior when reading an error
+            readAndVoid(process.inputStream)
+            communicator.sendDebugMessage("clearing error stream", MessageType.Info)
+
+            readAndVoid(process.errorStream)
+
+
+
+        communicator.sendDebugMessage("waiting for process to return", MessageType.Info)
+
+        // process.waitFor() //we must wait here to ensure correct behavior when reading an error
         val exitStatus = process.waitFor()
         communicator.sendDebugMessage("exit status of execution: $exitStatus", MessageType.Info)
     }
 
+
+    private fun readAndVoid(stream: InputStream) {
+        stream.readAllBytes()
+    }
+
     private fun readFromStream(stream: InputStream) : String{
-        val reader = BufferedReader(InputStreamReader(stream))
+        return ""
+
+      //  stream.readAllBytes()
+
+/*        val reader = BufferedReader(InputStreamReader(stream))
+
         val builder = StringBuilder()
         var line: String?
-        while (reader.readLine().also { line = it } != null) {
-            builder.append(line)
-            builder.append(System.getProperty("line.separator"))
+
+
+
+        var currentLine = reader.readLine()
+        while (currentLine != null){
+            communicator.sendDebugMessage("current line $currentLine", MessageType.Info)
+            communicator.sendDebugMessage("reading next line ", MessageType.Info)
+            currentLine = reader.readLine()
+            communicator.sendDebugMessage("checking line", MessageType.Info)
         }
-        return builder.toString()
+
+*/
+        /*
+            while (reader.readLine().also { line = it } != null) {
+                communicator.sendDebugMessage("read line", MessageType.Info)
+
+                builder.append(line)
+                builder.append(System.getProperty("line.separator"))
+                communicator.sendDebugMessage("Line Contains, $line and ${line!!.length} symboles", MessageType.Info)
+            }
+            communicator.sendDebugMessage("returning", MessageType.Info)
+
+
+         */
+     //   return builder.toString()
     }
 
 
@@ -249,4 +297,5 @@ class ProBCommandLineAccess(val communicator : CommunicatorInterface) : ProBInte
 
                 }
     }
+
 }
