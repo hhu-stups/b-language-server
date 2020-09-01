@@ -22,11 +22,6 @@ fun main() {
 
 fun startServer(inputStream: InputStream, outputStream: OutputStream){
 
-    println("starting kernel")
-    val kernel = ProBKernelManager()
-    kernel.start()
-    println("done")
-
     val server = Server()
     val launcher : Launcher<LanguageClient> = LSPLauncher.createServerLauncher(server, inputStream, outputStream)
     val startListing : Future<*> = launcher.startListening()

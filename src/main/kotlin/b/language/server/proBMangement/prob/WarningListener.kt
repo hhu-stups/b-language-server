@@ -5,8 +5,10 @@ import de.prob.animator.domainobjects.ErrorItem
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.DiagnosticSeverity
 
-
-class MyWarningListener : IWarningListener {
+/**
+ * Custom collector to collect warnings from prob kernel
+ */
+class WarningListener : IWarningListener {
     private val warningList : ArrayList<ErrorItem> = arrayListOf()
     override fun warningsOccurred(warnings: MutableList<ErrorItem>?) {
         warningList.addAll(warnings!!.toList())

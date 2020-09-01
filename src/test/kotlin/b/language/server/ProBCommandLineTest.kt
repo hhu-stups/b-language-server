@@ -1,18 +1,5 @@
 package b.language.server
 
-import b.language.server.dataStorage.Position
-import b.language.server.dataStorage.Problem
-import b.language.server.dataStorage.Settings
-import com.google.gson.Gson
-import org.eclipse.lsp4j.Diagnostic
-import org.eclipse.lsp4j.DiagnosticSeverity
-import org.eclipse.lsp4j.Range
-import kotlin.test.Test
-import org.junit.jupiter.api.io.TempDir
-import java.io.File
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
-
 class ProBCommandLineTest{
     /*
     @Test

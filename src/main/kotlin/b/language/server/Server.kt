@@ -2,7 +2,6 @@ package b.language.server
 
 import b.language.server.communication.Communicator
 import b.language.server.dataStorage.Settings
-import b.language.server.proBMangement.prob.ProBKernelConnector
 import b.language.server.proBMangement.prob.ProBKernelManager
 import com.google.gson.JsonObject
 import org.eclipse.lsp4j.*
@@ -12,11 +11,11 @@ import java.util.concurrent.CompletableFuture
 import kotlin.collections.HashMap
 import kotlin.system.exitProcess
 
-class Server() : LanguageServer{
+class Server : LanguageServer{
 
-    private val textDocumentService : TextDocumentService = BDocumentService(this, Communicator, ProBKernelConnector(Communicator))
+    private val textDocumentService : TextDocumentService = BDocumentService(this, Communicator, ProBKernelManager(Communicator))
     private val bWorkspaceService : WorkspaceService = BWorkspaceService(this)
-     lateinit var languageClient : LanguageClient
+    private lateinit var languageClient : LanguageClient
     var globalSettings : Settings = Settings()
     val documentSettings : HashMap<String, CompletableFuture<Settings>> = HashMap()
     var configurationAbility : Boolean = true
@@ -29,9 +28,6 @@ class Server() : LanguageServer{
         res.capabilities.textDocumentSync = Either.forLeft(TextDocumentSyncKind.Full)
         res.capabilities.workspace = WorkspaceServerCapabilities(WorkspaceFoldersOptions())
         res.capabilities.workspace.workspaceFolders.supported = true
-
-      //  languageClient.registerCapability(
-        //        RegistrationParams(listOf(Registration("all_config_changes", "didChangeConfiguration" , bWorkspaceService))))
 
         return CompletableFuture.supplyAsync { res }
     }
@@ -73,9 +69,6 @@ class Server() : LanguageServer{
         this.languageClient = remoteProxy
         Communicator.client = remoteProxy
     }
-
-
-
 
 
     /**

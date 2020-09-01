@@ -9,7 +9,7 @@ import org.eclipse.lsp4j.Range
 fun convertErrorItems(errorItems : List<ErrorItem>) : List<Diagnostic>{
     return errorItems.toList().map { errorItem ->
         errorItem.locations.map { location ->
-            Diagnostic(Range(Position(location.startLine, location.startColumn), Position(location.endLine, location.endColumn)),
+            Diagnostic(Range(Position(location.startLine-1, location.startColumn), Position(location.endLine-1, location.endColumn)),
                     errorItem.message,
                     getErrorItemType(errorItem),
                     location.filename)

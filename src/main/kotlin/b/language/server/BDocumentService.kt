@@ -2,14 +2,14 @@ package b.language.server
 
 import b.language.server.communication.CommunicatorInterface
 import b.language.server.proBMangement.ProBInterface
+import b.language.server.proBMangement.prob.CouldNotFindProBHomeException
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.TextDocumentService
-import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 
 class BDocumentService(private val server: Server,
                        private val communicator: CommunicatorInterface,
-                        private val proBInterface: ProBInterface) : TextDocumentService {
+                       private val proBInterface: ProBInterface) : TextDocumentService {
 
     private val documents = ConcurrentHashMap<String, String>()
     private val issueTracker : ConcurrentHashMap<String, Set<String>> = ConcurrentHashMap()
@@ -62,9 +62,10 @@ class BDocumentService(private val server: Server,
                 invalidFiles.forEach{uri -> communicator.publishDiagnostics(PublishDiagnosticsParams(uri, listOf()))}
                 communicator.sendDebugMessage("invalidating old files $invalidFiles", MessageType.Info)
                 issueTracker[currentUri] = filesWithProblems.toSet()
-            }catch (e : IOException){
-                communicator.sendDebugMessage("command could not be executed", MessageType.Info)
-                communicator.showMessage(e.message!!, MessageType.Error)
+
+            }catch (e : CouldNotFindProBHomeException){
+                communicator.sendDebugMessage(e.message!!, MessageType.Info)
+                communicator.showMessage(e.message, MessageType.Error)
             }
         }
 

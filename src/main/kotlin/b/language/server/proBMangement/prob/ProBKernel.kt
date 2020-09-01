@@ -1,10 +1,9 @@
+package b.language.server.proBMangement.prob
 
-import b.language.server.communication.CommunicationCollector
+
 import b.language.server.communication.Communicator
 import b.language.server.communication.CommunicatorInterface
 import b.language.server.dataStorage.ProBSettings
-import b.language.server.proBMangement.prob.MyWarningListener
-import b.language.server.proBMangement.prob.convertErrorItems
 import com.google.inject.Inject
 import com.google.inject.Injector
 import de.prob.animator.ReusableAnimator
@@ -20,63 +19,90 @@ import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.MessageType
 import java.io.IOException
 
-
-class ProBKernel @Inject constructor(private val injector : Injector, val classicalBFactory : ClassicalBFactory,
+/**
+ * Represents the interface to communicate with prob kernel
+ * Is called via injector
+ * @see ProBKernelManager
+ */
+class ProBKernel @Inject constructor(private val injector : Injector,
+                                     val classicalBFactory : ClassicalBFactory,
                                      private val animationSelector: AnimationSelector,
-                                     private val animator : ReusableAnimator) {
+                                     private val animator : ReusableAnimator,
+                                     private val communicator : CommunicatorInterface) {
 
 
-    val communicator = CommunicationCollector()
-    fun check(path : String, settings : ProBSettings) : Pair<List<Diagnostic>, List<Pair<String, MessageType>>>{
-        communicator.log.clear()
-
+    /**
+     * Checks the given machine file; prepares all necessary object
+     * @param path the file to check
+     * @param settings the settings under which the check takes place
+     * @return a list with the problems found
+     */
+    fun check(path : String, settings : ProBSettings) : List<Diagnostic>{
         Communicator.sendDebugMessage("Unload old machine", MessageType.Info)
         unloadMachine()
+
+        //TODO Rules factory
         val factory = injector.getInstance(FactoryProvider.factoryClassFromExtension(path.substringAfterLast(".")))
-        val warningListener = MyWarningListener()
+        val warningListener = WarningListener()
         animator.addWarningListener(warningListener)
         val parseErrors = mutableListOf<Diagnostic>()
         Communicator.sendDebugMessage("Load new machine", MessageType.Info)
-        loadMachine(
+
+        val strictProblems = loadMachine(
                 { stateSpace : StateSpace ->
                     try {
-                        val extractedModel = factory.extract(path)
-                        val stateSpaceWithSettings = extractedModel.load(prepareAdditionalSettings(settings))
-                        extractedModel.loadIntoStateSpace(stateSpaceWithSettings)
+                        factory.extract(path).loadIntoStateSpace(stateSpace)
                     } catch (e: IOException) {
-                      //  throw RuntimeException(e)
                         communicator.sendDebugMessage("IOException ${e.message}", MessageType.Info)
                     } catch (e: ModelTranslationError) {
                         communicator.sendDebugMessage("ModelTranslationError ${e.message}", MessageType.Info)
-
-                        //  throw RuntimeException(e)
                     }catch (e : ProBError){
                         parseErrors.addAll(convertErrorItems(e.errors))
                     }
                     Trace(stateSpace)
                 }, settings)
-        return Pair(listOf(warningListener.getWarnings(), parseErrors).flatten(), communicator.log)
+        communicator.sendDebugMessage("returning from kernel", MessageType.Info)
+        return listOf(warningListener.getWarnings(), parseErrors).flatten()
     }
 
+    /**
+     * Does the main work
+     * @param newTraceCreator a anonymous function dealing with the state space
+     * @param settings the settings to be applied
+     */
     private fun loadMachine(newTraceCreator :java.util.function.Function<StateSpace, Trace>, settings: ProBSettings){
         val newStateSpace = animator.createStateSpace()
+        newStateSpace.changePreferences(prepareAdditionalSettings(settings))
         try {
+            communicator.sendDebugMessage("changing animation", MessageType.Info)
             animationSelector.changeCurrentAnimation(newTraceCreator.apply(newStateSpace))
+            communicator.sendDebugMessage("executing optional steps", MessageType.Info)
             executeAdditionalOptions(settings)
+            newStateSpace.performExtendedStaticChecks() //TODO move to additional options
+            communicator.sendDebugMessage("returning...", MessageType.Info)
+
         } catch (e: RuntimeException) {
             newStateSpace.kill()
             throw e
         }
     }
 
-    private fun executeAdditionalOptions(settings : ProBSettings){
-       // animator.createStateSpace()
-        if(settings.wdChecks){
-            animator.execute(CheckWellDefinednessCommand())
-        }
 
+    /**
+     * executes additional commands, which are defined as separate command, all others are executed at
+     * @see prepareAdditionalSettings
+     * @param settings the settings to be executed as command
+     */
+    private fun executeAdditionalOptions(settings : ProBSettings){
+        if(settings.wdChecks){
+            communicator.sendDebugMessage("Doing WD checks", MessageType.Info)
+           animator.execute(CheckWellDefinednessCommand())
+        }
     }
 
+    /**
+     * to clean up a machine
+     */
     private fun unloadMachine() {
         val oldTrace = animationSelector.currentTrace
         if (oldTrace != null) {
@@ -87,6 +113,11 @@ class ProBKernel @Inject constructor(private val injector : Injector, val classi
     }
 
 
+    /**
+     * prepares a map with additional settings
+     * @param proBSettings the settings to put in the map
+     * @return the settings map
+     */
     private fun prepareAdditionalSettings(proBSettings: ProBSettings): MutableMap<String, String> {
         val settings = mutableMapOf<String, String>()
         if(proBSettings.performanceHints) {

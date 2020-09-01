@@ -1,96 +1,82 @@
 package b.language.server.proBMangement.prob
 
-import ProBKernel
-import b.language.server.communication.CommunicationCollector
-import b.language.server.communication.Communicator
+import b.language.server.communication.CommunicatorInterface
 import b.language.server.dataStorage.ProBSettings
 import b.language.server.dataStorage.Settings
-import com.google.gson.Gson
+import b.language.server.proBMangement.ProBInterface
 import com.google.inject.Guice
 import com.google.inject.Stage
+import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.MessageType
-import org.zeromq.SocketType
-
-import org.zeromq.ZContext
-import org.zeromq.ZMQ
+import java.io.File
 import java.net.URI
 
 /**
- * Creates the prob kernel access and maintaince a stady connection
+ * Creates the prob kernel access and maintenance
  */
-class ProBKernelManager : Thread() {
+class ProBKernelManager(private val communicator : CommunicatorInterface) : ProBInterface {
 
-    private var active = true
-    private lateinit var kernel : ProBKernel
-    private var probHome = ""
-    private val communicator = CommunicationCollector()
+    private var kernel : ProBKernel
+    private var probHome = "DEFAULT"
 
-
-
-    override fun run() {
-        ZContext().use { context ->
-            val socket: ZMQ.Socket = context.createSocket(SocketType.REP)
-            socket.bind("tcp://*:5557")
-            kernel = setup()
-            while (active) {
-                val message = socket.recvStr()
-                val request = Gson().fromJson(message, Request::class.java)
-                Communicator.sendDebugMessage("manageer got request... " , MessageType.Info)
-
-                val reply = if (request.type==MessageTypes.CHECK){
-                    check(request.uri, request.settings)
-                }else{
-                    kill()
-                }
-                System.err.println("sending result back")
-                socket.send(Gson().toJson(reply))
-            }
-        }
-    }
-
-
-
-    fun check(uri : String, settings : Settings) : Reply{
-        val path = URI(uri).path
-        System.err.println("start prob")
-        System.err.println("checking file $path")
-        Communicator.sendDebugMessage("checking document", MessageType.Info)
-
-        val result = kernel.check(path, ProBSettings(settings.wdChecks, settings.strictChecks, settings.performanceHints))
-        System.err.println("returning result")
-        return Reply(result.first, result.second)
-    }
-
-    fun kill() : Reply{
-        active = false
-        return Reply(listOf(), listOf())
+    init{
+        kernel = setup()
     }
 
 
     /**
-     * @param probHome the home of prob; DEFAULT for the prob version delivered with the library
      * @return an instance of prob kernel
      */
-    fun setup() : ProBKernel {
-
-    //    Communicator.sendDebugMessage("creating injector...", MessageType.Info)
-
-        System.err.println("Creating injector in thread " + this.id)
-        val injector = Guice.createInjector(Stage.PRODUCTION, ProBKernelModule())
-        System.err.println("Done " + this.id)
-
-      //  Communicator.sendDebugMessage("..done", MessageType.Info)
-
-
+    private fun setup() : ProBKernel {
+        val injector = Guice.createInjector(Stage.PRODUCTION, ProBKernelModule(communicator))
         val kernel : ProBKernel
         try{
             kernel = injector.getInstance(ProBKernel::class.java)
         }catch (e : de.prob.exception.CliError){
-  //          Communicator.sendDebugMessage("wrong path to prob", MessageType.Error)
             throw Exception("wrong path to prob $probHome")
         }
-    //    Communicator.sendDebugMessage("returning kernel", MessageType.Info)
-
         return kernel
+    }
+
+    /**
+     * Checks if the given prob home matches - if not a knew prob kernel will be initialized
+     * @param probNewHome the potential new proB home
+     * @return changes was successful/no change at all
+     */
+    private fun checkProBVersionSetting(probNewHome : String) : Boolean{
+        return if(probNewHome != probHome)
+        {
+            if(File(probNewHome).exists()) {
+                System.setProperty("prob.home", "/home/sebastian/prob_prolog")
+                kernel = setup()
+                probHome = probNewHome
+                true
+            } else{
+                false
+            }
+        }else{
+            true
+        }
+    }
+
+
+    /**
+     * Checks the given document with the help of ProB
+     * @param uri the source to check
+     * @param settings the settings for this document
+     * @return a list of all problems found
+     *
+     * @throws CouldNotFindProBHomeException the given path ist not "DEFAULT" and wrong
+     */
+    override fun checkDocument(uri: String, settings: Settings): List<Diagnostic> {
+        val path = URI(uri).path
+        communicator.sendDebugMessage("try to use ${settings.probHome} as prob version", MessageType.Info)
+        val result = checkProBVersionSetting(settings.probHome)
+        if(!result){
+            throw CouldNotFindProBHomeException("searched at ${settings.probHome} for prob but found nothing")
+        }
+        communicator.sendDebugMessage("success...", MessageType.Info)
+        communicator.sendDebugMessage("checking document", MessageType.Info)
+        return kernel.check(path, ProBSettings(wdChecks = settings.wdChecks, strictChecks = settings.strictChecks, performanceHints = settings.performanceHints))
     }
 }
