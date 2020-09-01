@@ -13,7 +13,7 @@ import java.io.File
  * @return the settings object
  */
 fun castJsonToSetting(json : JsonObject) : Settings {
-    return Settings(Gson().fromJson(json.get("maxNumberOfProblems"), Int::class.java),
+    return Settings(
             Gson().fromJson(json.get("wdChecks"), Boolean::class.java),
             Gson().fromJson(json.get("strictChecks"), Boolean::class.java),
             Gson().fromJson(json.get("performanceHints"), Boolean::class.java),
