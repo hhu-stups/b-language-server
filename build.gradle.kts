@@ -24,6 +24,8 @@ repositories {
 
 }
 
+
+
 dependencies {
     // Align versions of all Kotlin components
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
@@ -60,11 +62,20 @@ dependencies {
 }
 
 
+
+
+
 tasks.test {
     useJUnitPlatform()
 }
 
 val gitVersion: groovy.lang.Closure<*> by extra
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>(){
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+
 tasks.shadowJar{
   //  this.version = gitVersion().toString()
 }
