@@ -1,20 +1,16 @@
 package b.language.server
 
-import b.language.server.proBMangement.prob.ProBKernelManager
 import org.eclipse.lsp4j.jsonrpc.Launcher
 import org.eclipse.lsp4j.launch.LSPLauncher
 import org.eclipse.lsp4j.services.LanguageClient
 import java.io.*
-import java.net.InetAddress
 import java.net.ServerSocket
-import java.net.Socket
-import java.nio.charset.StandardCharsets
 import java.util.concurrent.Future
 
 
 fun main() {
     println("opening connection and waiting ...")
-    val socket = ServerSocket(5555)
+    val socket = ServerSocket(55555)
     val channel = socket.accept()
     println("accepted connection from ${channel.inetAddress}")
     startServer(channel.getInputStream(), channel.getOutputStream())

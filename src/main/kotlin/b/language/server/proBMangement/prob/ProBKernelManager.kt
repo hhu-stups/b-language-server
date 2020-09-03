@@ -10,6 +10,8 @@ import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.MessageType
 import java.io.File
 import java.net.URI
+import java.nio.file.Files
+import java.nio.file.Path
 
 /**
  * Creates the prob kernel access and maintenance
@@ -46,13 +48,21 @@ class ProBKernelManager(private val communicator : CommunicatorInterface) : ProB
     private fun checkProBVersionSetting(probNewHome : String) : Boolean{
         return if(probNewHome != probHome)
         {
-            if(File(probNewHome).exists()) {
-                System.setProperty("prob.home", "/home/sebastian/prob_prolog")
+            if(probNewHome == "DEFAULT"){ //Use default prob
+                System.setProperty("prob.home", "null")
                 kernel = setup()
                 probHome = probNewHome
                 true
-            } else{
-                false
+            }
+            else {
+                if (File(probNewHome).exists()) { // Use custom prob
+                    System.setProperty("prob.home", probNewHome)
+                    kernel = setup()
+                    probHome = probNewHome
+                    true
+                } else {
+                    false
+                }
             }
         }else{
             true
@@ -70,12 +80,15 @@ class ProBKernelManager(private val communicator : CommunicatorInterface) : ProB
      */
     override fun checkDocument(uri: String, settings: Settings): List<Diagnostic> {
         val path = URI(uri).path
-        communicator.sendDebugMessage("try to use ${settings.probHome} as prob version", MessageType.Info)
-        val result = checkProBVersionSetting(settings.probHome)
-        if(!result){
-            throw CouldNotFindProBHomeException("searched at ${settings.probHome} for prob but found nothing")
-        }
-        communicator.sendDebugMessage("success...", MessageType.Info)
+
+        Files.exists(Path.of(URI(uri)))
+        communicator.sendDebugMessage("try to use ${settings.probHome} as prob version instead of ${System.getProperty("prob.home")}", MessageType.Info)
+    //    val result = checkProBVersionSetting(settings.probHome)
+      //  if(!result){
+        //    throw CouldNotFindProBHomeException("searched at ${settings.probHome} for prob but found nothing")
+        //}
+
+        communicator.sendDebugMessage("success!", MessageType.Info)
         communicator.sendDebugMessage("checking document", MessageType.Info)
         return kernel.check(path, ProBSettings(wdChecks = settings.wdChecks, strictChecks = settings.strictChecks, performanceHints = settings.performanceHints))
     }

@@ -14,7 +14,7 @@ import kotlin.system.exitProcess
 class Server : LanguageServer{
 
     private val textDocumentService : TextDocumentService = BDocumentService(this, Communicator, ProBKernelManager(Communicator))
-    private val bWorkspaceService : WorkspaceService = BWorkspaceService(this)
+    private val bWorkspaceService : WorkspaceService = BWorkspaceService(this, Communicator)
     private lateinit var languageClient : LanguageClient
     var globalSettings : Settings = Settings()
     val documentSettings : HashMap<String, CompletableFuture<Settings>> = HashMap()

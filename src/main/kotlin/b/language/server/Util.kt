@@ -4,7 +4,6 @@ import b.language.server.dataStorage.Settings
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 
-import java.io.File
 
 
 /**
@@ -21,3 +20,5 @@ fun castJsonToSetting(json : JsonObject) : Settings {
             Gson().fromJson(json.get("debugMode"), Boolean::class.java))
 
 }
+
+

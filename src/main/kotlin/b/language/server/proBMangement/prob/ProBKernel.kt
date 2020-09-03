@@ -4,10 +4,12 @@ package b.language.server.proBMangement.prob
 import b.language.server.communication.Communicator
 import b.language.server.communication.CommunicatorInterface
 import b.language.server.dataStorage.ProBSettings
+import com.google.gson.Gson
 import com.google.inject.Inject
 import com.google.inject.Injector
 import de.prob.animator.ReusableAnimator
 import de.prob.animator.command.CheckWellDefinednessCommand
+import de.prob.animator.domainobjects.ErrorItem
 import de.prob.exception.ProBError
 import de.prob.scripting.ClassicalBFactory
 import de.prob.scripting.FactoryProvider
@@ -17,7 +19,10 @@ import de.prob.statespace.StateSpace
 import de.prob.statespace.Trace
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.MessageType
+import org.ietf.jgss.GSSContext
+import java.io.File
 import java.io.IOException
+import java.nio.charset.Charset
 
 /**
  * Represents the interface to communicate with prob kernel
@@ -41,12 +46,13 @@ class ProBKernel @Inject constructor(private val injector : Injector,
         Communicator.sendDebugMessage("Unload old machine", MessageType.Info)
         unloadMachine()
 
-        //TODO Rules factory
         val factory = injector.getInstance(FactoryProvider.factoryClassFromExtension(path.substringAfterLast(".")))
+
         val warningListener = WarningListener()
         animator.addWarningListener(warningListener)
         val parseErrors = mutableListOf<Diagnostic>()
-        Communicator.sendDebugMessage("Load new machine", MessageType.Info)
+
+        Communicator.sendDebugMessage("loading new machine", MessageType.Info)
 
         val strictProblems = loadMachine(
                 { stateSpace : StateSpace ->
@@ -61,8 +67,10 @@ class ProBKernel @Inject constructor(private val injector : Injector,
                     }
                     Trace(stateSpace)
                 }, settings)
+
         communicator.sendDebugMessage("returning from kernel", MessageType.Info)
-        return listOf(warningListener.getWarnings(), parseErrors).flatten()
+
+        return listOf(warningListener.getWarnings(), parseErrors, strictProblems).flatten()
     }
 
     /**
@@ -70,21 +78,28 @@ class ProBKernel @Inject constructor(private val injector : Injector,
      * @param newTraceCreator a anonymous function dealing with the state space
      * @param settings the settings to be applied
      */
-    private fun loadMachine(newTraceCreator :java.util.function.Function<StateSpace, Trace>, settings: ProBSettings){
+    private fun loadMachine(newTraceCreator :java.util.function.Function<StateSpace, Trace>, settings: ProBSettings): List<Diagnostic> {
         val newStateSpace = animator.createStateSpace()
         newStateSpace.changePreferences(prepareAdditionalSettings(settings))
+        val resultLint = mutableListOf<ErrorItem>() // see java doc of prepareAdditionalSettings
         try {
             communicator.sendDebugMessage("changing animation", MessageType.Info)
             animationSelector.changeCurrentAnimation(newTraceCreator.apply(newStateSpace))
             communicator.sendDebugMessage("executing optional steps", MessageType.Info)
             executeAdditionalOptions(settings)
-            newStateSpace.performExtendedStaticChecks() //TODO move to additional options
+
+            if (settings.strictChecks) {
+                resultLint.addAll(newStateSpace.performExtendedStaticChecks())
+            }
+
             communicator.sendDebugMessage("returning...", MessageType.Info)
 
         } catch (e: RuntimeException) {
             newStateSpace.kill()
             throw e
         }
+
+        return convertErrorItems(resultLint)
     }
 
 
@@ -115,6 +130,7 @@ class ProBKernel @Inject constructor(private val injector : Injector,
 
     /**
      * prepares a map with additional settings
+     * note that the -lint option is an extra call to the state space and must be performed elsewhere
      * @param proBSettings the settings to put in the map
      * @return the settings map
      */
