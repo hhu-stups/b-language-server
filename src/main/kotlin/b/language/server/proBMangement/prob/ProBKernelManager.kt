@@ -49,13 +49,15 @@ class ProBKernelManager(private val communicator : CommunicatorInterface) : ProB
         return if(probNewHome != probHome)
         {
             if(probNewHome == "DEFAULT"){ //Use default prob
-                System.setProperty("prob.home", "null")
+                System.setProperty("prob.home", "DEFAULT")
                 kernel = setup()
                 probHome = probNewHome
                 true
             }
             else {
-                if (File(probNewHome).exists()) { // Use custom prob
+
+                val dict = File(probNewHome)
+                if (dict.exists() && dict.isDirectory) { // Use custom prob
                     System.setProperty("prob.home", probNewHome)
                     kernel = setup()
                     probHome = probNewHome
@@ -82,14 +84,16 @@ class ProBKernelManager(private val communicator : CommunicatorInterface) : ProB
         val path = URI(uri).path
 
         Files.exists(Path.of(URI(uri)))
-        communicator.sendDebugMessage("try to use ${settings.probHome} as prob version instead of ${System.getProperty("prob.home")}", MessageType.Info)
-    //    val result = checkProBVersionSetting(settings.probHome)
-      //  if(!result){
-        //    throw CouldNotFindProBHomeException("searched at ${settings.probHome} for prob but found nothing")
-        //}
+        communicator.sendDebugMessage("try to use ${settings.probHome} as prob version instead of " +
+                System.getProperty("prob.home"), MessageType.Info)
+        val result = checkProBVersionSetting(settings.probHome)
+        if(!result){
+          throw CouldNotFindProBHomeException("searched at ${settings.probHome} for prob but found nothing")
+        }
 
         communicator.sendDebugMessage("success!", MessageType.Info)
         communicator.sendDebugMessage("checking document", MessageType.Info)
-        return kernel.check(path, ProBSettings(wdChecks = settings.wdChecks, strictChecks = settings.strictChecks, performanceHints = settings.performanceHints))
+        return kernel.check(path, ProBSettings(wdChecks = settings.wdChecks, strictChecks = settings.strictChecks,
+                performanceHints = settings.performanceHints))
     }
 }
