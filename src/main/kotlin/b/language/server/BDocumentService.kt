@@ -55,7 +55,7 @@ class BDocumentService(private val server: Server,
 
             try{
                 val diagnostics: List<Diagnostic> = proBInterface.checkDocument(currentUri, settings)
-                communicator.sendDebugMessage("created diagnostics $diagnostics", MessageType.Info)
+                communicator.sendDebugMessage("creating diagnostics $diagnostics", MessageType.Info)
                 communicator.publishDiagnostics(PublishDiagnosticsParams(currentUri, diagnostics))
                 val filesWithProblems = diagnostics.map { diagnostic -> diagnostic.source }
                 val invalidFiles = calculateToInvalidate(currentUri, filesWithProblems)

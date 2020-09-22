@@ -30,6 +30,9 @@ fun getErrorItemType(errorItem: ErrorItem.Type) : DiagnosticSeverity{
         ErrorItem.Type.INTERNAL_ERROR -> {
             DiagnosticSeverity.Error
         }
+        ErrorItem.Type.MESSAGE -> {
+            DiagnosticSeverity.Information
+        }
         else -> {
             DiagnosticSeverity.Error
         }

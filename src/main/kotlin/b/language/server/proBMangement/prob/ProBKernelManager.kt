@@ -88,7 +88,8 @@ class ProBKernelManager(private val communicator : CommunicatorInterface) : ProB
                 System.getProperty("prob.home"), MessageType.Info)
         val result = checkProBVersionSetting(settings.probHome)
         if(!result){
-          throw CouldNotFindProBHomeException("searched at ${settings.probHome} for prob but found nothing")
+          throw CouldNotFindProBHomeException("searched at ${settings.probHome} for prob but found nothing - make sure " +
+                  "you point to the prob directory not to probcli.sh/probcli")
         }
 
         communicator.sendDebugMessage("success!", MessageType.Info)

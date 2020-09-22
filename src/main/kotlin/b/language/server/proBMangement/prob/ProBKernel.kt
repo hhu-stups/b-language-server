@@ -4,7 +4,6 @@ package b.language.server.proBMangement.prob
 import b.language.server.communication.Communicator
 import b.language.server.communication.CommunicatorInterface
 import b.language.server.dataStorage.ProBSettings
-import com.google.gson.Gson
 import com.google.inject.Inject
 import com.google.inject.Injector
 import de.prob.animator.ReusableAnimator
@@ -19,10 +18,7 @@ import de.prob.statespace.StateSpace
 import de.prob.statespace.Trace
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.MessageType
-import org.ietf.jgss.GSSContext
-import java.io.File
 import java.io.IOException
-import java.nio.charset.Charset
 
 /**
  * Represents the interface to communicate with prob kernel
@@ -43,13 +39,13 @@ class ProBKernel @Inject constructor(private val injector : Injector,
      * @return a list with the problems found
      */
     fun check(path : String, settings : ProBSettings) : List<Diagnostic>{
-        Communicator.sendDebugMessage("Unload old machine", MessageType.Info)
+        Communicator.sendDebugMessage("unloading old machine", MessageType.Info)
         unloadMachine()
 
         val factory = injector.getInstance(FactoryProvider.factoryClassFromExtension(path.substringAfterLast(".")))
 
-        val warningListener = WarningListener()
-        animator.addWarningListener(warningListener)
+        val informationListener = InformationListener()
+        animator.addWarningListener(informationListener)
         val parseErrors = mutableListOf<Diagnostic>()
 
         Communicator.sendDebugMessage("loading new machine", MessageType.Info)
@@ -70,7 +66,7 @@ class ProBKernel @Inject constructor(private val injector : Injector,
 
         communicator.sendDebugMessage("returning from kernel", MessageType.Info)
 
-        return listOf(warningListener.getWarnings(), parseErrors, strictProblems).flatten()
+        return listOf(informationListener.getInformation(), parseErrors, strictProblems).flatten()
     }
 
     /**
@@ -92,7 +88,7 @@ class ProBKernel @Inject constructor(private val injector : Injector,
                 resultLint.addAll(newStateSpace.performExtendedStaticChecks())
             }
 
-            communicator.sendDebugMessage("returning...", MessageType.Info)
+            communicator.sendDebugMessage("finished evaluation", MessageType.Info)
 
         } catch (e: RuntimeException) {
             newStateSpace.kill()
@@ -110,7 +106,7 @@ class ProBKernel @Inject constructor(private val injector : Injector,
      */
     private fun executeAdditionalOptions(settings : ProBSettings){
         if(settings.wdChecks){
-            communicator.sendDebugMessage("Doing WD checks", MessageType.Info)
+            communicator.sendDebugMessage("doing WD checks", MessageType.Info)
            animator.execute(CheckWellDefinednessCommand())
         }
     }
