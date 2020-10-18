@@ -49,7 +49,7 @@ class ProBKernelManager(private val communicator : CommunicatorInterface) : ProB
         return if(probNewHome != probHome)
         {
             if(probNewHome == "DEFAULT"){ //Use default prob
-                System.setProperty("prob.home", "DEFAULT")
+                System.setProperty("prob.home", "null")
                 kernel = setup()
                 probHome = probNewHome
                 true

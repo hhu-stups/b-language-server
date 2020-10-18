@@ -6,8 +6,8 @@ import org.eclipse.lsp4j.DiagnosticSeverity
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
 
-fun convertErrorItems(errorItems: List<ErrorItem>) : List<Diagnostic>{
-    return errorItems.toList().map { errorItem ->
+fun convertErrorItems(errorItems: List<ErrorItem>, currentLoadedFile : String) : List<Diagnostic>{
+    return  errorItems.map { errorItem ->
         errorItem.locations.map { location ->
             Diagnostic(Range(
                     Position(location.startLine - 1, location.startColumn),
@@ -15,6 +15,13 @@ fun convertErrorItems(errorItems: List<ErrorItem>) : List<Diagnostic>{
                     errorItem.message,
                     getErrorItemType(errorItem.type),
                     location.filename)
+        }.ifEmpty { //Fallback when errors from prob do not have position infos
+            listOf(Diagnostic(Range(
+                    Position(0,0),
+                    Position(0,0)),
+                    errorItem.message,
+                    getErrorItemType(errorItem.type),
+                    currentLoadedFile))
         }
     }.flatten()
 }
@@ -30,9 +37,9 @@ fun getErrorItemType(errorItem: ErrorItem.Type) : DiagnosticSeverity{
         ErrorItem.Type.INTERNAL_ERROR -> {
             DiagnosticSeverity.Error
         }
-        ErrorItem.Type.MESSAGE -> {
+     /*   ErrorItem.Type.MESSAGE -> {
             DiagnosticSeverity.Information
-        }
+        }*/
         else -> {
             DiagnosticSeverity.Error
         }

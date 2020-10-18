@@ -16,6 +16,7 @@ import de.prob.scripting.ModelTranslationError
 import de.prob.statespace.AnimationSelector
 import de.prob.statespace.StateSpace
 import de.prob.statespace.Trace
+import kotlinx.coroutines.flow.flowViaChannel
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.MessageType
 import java.io.IOException
@@ -44,29 +45,30 @@ class ProBKernel @Inject constructor(private val injector : Injector,
 
         val factory = injector.getInstance(FactoryProvider.factoryClassFromExtension(path.substringAfterLast(".")))
 
-        val informationListener = InformationListener()
+        val informationListener = InformationListener(path)
         animator.addWarningListener(informationListener)
-        val parseErrors = mutableListOf<Diagnostic>()
 
         Communicator.sendDebugMessage("loading new machine", MessageType.Info)
+        val errors = mutableListOf<ErrorItem>()
 
         val strictProblems = loadMachine(
-                { stateSpace : StateSpace ->
+                {
+                    stateSpace : StateSpace ->
                     try {
                         factory.extract(path).loadIntoStateSpace(stateSpace)
                     } catch (e: IOException) {
                         communicator.sendDebugMessage("IOException ${e.message}", MessageType.Info)
                     } catch (e: ModelTranslationError) {
                         communicator.sendDebugMessage("ModelTranslationError ${e.message}", MessageType.Info)
-                    }catch (e : ProBError){
-                        parseErrors.addAll(convertErrorItems(e.errors))
+                    } catch (e : ProBError){
+                        errors.addAll(e.errors)
                     }
                     Trace(stateSpace)
-                }, settings)
+                }, settings, path)
 
-        communicator.sendDebugMessage("returning from kernel", MessageType.Info)
+        communicator.sendDebugMessage("returning from kernel problems are ${strictProblems.toString()}", MessageType.Info)
 
-        return listOf(informationListener.getInformation(), parseErrors, strictProblems).flatten()
+        return listOf(informationListener.getInformation(), strictProblems, convertErrorItems(errors, path)).flatten()
     }
 
     /**
@@ -74,28 +76,37 @@ class ProBKernel @Inject constructor(private val injector : Injector,
      * @param newTraceCreator a anonymous function dealing with the state space
      * @param settings the settings to be applied
      */
-    private fun loadMachine(newTraceCreator :java.util.function.Function<StateSpace, Trace>, settings: ProBSettings): List<Diagnostic> {
+    private fun loadMachine(newTraceCreator :java.util.function.Function<StateSpace, Trace>, settings: ProBSettings,
+                            path : String): List<Diagnostic> {
+        communicator.sendDebugMessage("creating new state space", MessageType.Info)
+
         val newStateSpace = animator.createStateSpace()
+        communicator.sendDebugMessage("setting preferences", MessageType.Info)
         newStateSpace.changePreferences(prepareAdditionalSettings(settings))
-        val resultLint = mutableListOf<ErrorItem>() // see java doc of prepareAdditionalSettings
+        val errors = mutableListOf<ErrorItem>()
         try {
             communicator.sendDebugMessage("changing animation", MessageType.Info)
             animationSelector.changeCurrentAnimation(newTraceCreator.apply(newStateSpace))
+            communicator.sendDebugMessage("done", MessageType.Info)
+
             communicator.sendDebugMessage("executing optional steps", MessageType.Info)
             executeAdditionalOptions(settings)
 
             if (settings.strictChecks) {
-                resultLint.addAll(newStateSpace.performExtendedStaticChecks())
+                errors.addAll(newStateSpace.performExtendedStaticChecks())
             }
 
             communicator.sendDebugMessage("finished evaluation", MessageType.Info)
 
-        } catch (e: RuntimeException) {
+        }catch (e: RuntimeException) {
+            communicator.sendDebugMessage("something bad happened, statespace was killed", MessageType.Warning)
             newStateSpace.kill()
             throw e
         }
 
-        return convertErrorItems(resultLint)
+        communicator.sendDebugMessage("processing errors", MessageType.Info)
+
+        return convertErrorItems(errors, path)
     }
 
 
@@ -135,8 +146,13 @@ class ProBKernel @Inject constructor(private val injector : Injector,
         if(proBSettings.performanceHints) {
             settings["STRICT_CLASH_CHECKING"] = "TRUE"
             settings["TYPE_CHECK_DEFINITIONS"] = "TRUE"
+        }else{
+            settings["STRICT_CLASH_CHECKING"] = "TRUE"
+            settings["TYPE_CHECK_DEFINITIONS"] = "TRUE"
         }
         if (proBSettings.strictChecks) {
+            settings["PERFORMANCE_INFO"] = "TRUE"
+        }else{
             settings["PERFORMANCE_INFO"] = "TRUE"
         }
         return settings
