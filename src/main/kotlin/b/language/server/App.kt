@@ -9,8 +9,9 @@ import java.util.concurrent.Future
 
 
 fun main() {
-    println("opening connection and waiting ...")
-    val socket = ServerSocket(55556)
+    val socket = ServerSocket(0)
+
+    println("<${socket.localPort}> is the port; opening connection and listening")
     val channel = socket.accept()
     println("accepted connection from ${channel.inetAddress}")
     startServer(channel.getInputStream(), channel.getOutputStream())
