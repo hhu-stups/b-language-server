@@ -45,7 +45,6 @@ class BDocumentService(private val server: Server,
      * @param currentUri uri to perform actions on
      */
     fun checkDocument(currentUri : String){
-
         val clientSettings = server.getDocumentSettings(currentUri)
         communicator.sendDebugMessage("waiting for document settings", MessageType.Info)
 
@@ -54,6 +53,7 @@ class BDocumentService(private val server: Server,
             communicator.sendDebugMessage("settings are $settings", MessageType.Info)
 
             try{
+                communicator.sendDebugMessage("calling probInterface", MessageType.Info);
                 val diagnostics: List<Diagnostic> = proBInterface.checkDocument(currentUri, settings)
                 communicator.sendDebugMessage("creating diagnostics $diagnostics", MessageType.Info)
                 communicator.publishDiagnostics(PublishDiagnosticsParams(currentUri, diagnostics))

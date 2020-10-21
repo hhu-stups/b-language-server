@@ -10,8 +10,6 @@ import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.MessageType
 import java.io.File
 import java.net.URI
-import java.nio.file.Files
-import java.nio.file.Path
 
 /**
  * Creates the prob kernel access and maintenance
@@ -51,7 +49,6 @@ class ProBKernelManager(private val communicator : CommunicatorInterface) : ProB
             if(probNewHome == "DEFAULT"){ //Use default prob
                 System.setProperty("prob.home", "null")
                 kernel = setup()
-                probHome = probNewHome
                 true
             }
             else {
@@ -81,11 +78,11 @@ class ProBKernelManager(private val communicator : CommunicatorInterface) : ProB
      * @throws CouldNotFindProBHomeException the given path ist not "DEFAULT" and wrong
      */
     override fun checkDocument(uri: String, settings: Settings): List<Diagnostic> {
-        val path = URI(uri).path
 
-        Files.exists(Path.of(URI(uri)))
-        communicator.sendDebugMessage("try to use ${settings.probHome} as prob version instead of " +
-                System.getProperty("prob.home"), MessageType.Info)
+        val path = URI(uri).path
+       //Files.exists(Path.of(URI(uri)))
+
+        communicator.sendDebugMessage("try to use ${settings.probHome} as prob version instead of " + System.getProperty("prob.home"), MessageType.Info)
         val result = checkProBVersionSetting(settings.probHome)
         if(!result){
           throw CouldNotFindProBHomeException("searched at ${settings.probHome} for prob but found nothing - make sure " +

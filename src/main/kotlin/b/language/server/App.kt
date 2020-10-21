@@ -13,7 +13,7 @@ fun main() {
 
     println("<${socket.localPort}> is the port; opening connection and listening")
     val channel = socket.accept()
-    println("accepted connection from ${channel.inetAddress}")
+    //println("accepted connection from ${channel.inetAddress}")
     startServer(channel.getInputStream(), channel.getOutputStream())
 }
 
