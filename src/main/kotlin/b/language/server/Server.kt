@@ -28,7 +28,7 @@ class Server : LanguageServer{
         res.capabilities.textDocumentSync = Either.forLeft(TextDocumentSyncKind.Full)
         res.capabilities.workspace = WorkspaceServerCapabilities(WorkspaceFoldersOptions())
         res.capabilities.workspace.workspaceFolders.supported = true
-        res.capabilities.completionProvider = CompletionOptions()
+       // res.capabilities.completionProvider = CompletionOptions()
         return CompletableFuture.supplyAsync { res }
     }
 

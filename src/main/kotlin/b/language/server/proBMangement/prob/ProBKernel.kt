@@ -8,10 +8,12 @@ import com.google.inject.Inject
 import com.google.inject.Injector
 import de.prob.animator.ReusableAnimator
 import de.prob.animator.command.CheckWellDefinednessCommand
+import de.prob.animator.command.GetMachineOperationInfos
 import de.prob.animator.domainobjects.ErrorItem
 import de.prob.exception.ProBError
 import de.prob.scripting.ClassicalBFactory
 import de.prob.scripting.FactoryProvider
+import de.prob.scripting.ModelFactory
 import de.prob.scripting.ModelTranslationError
 import de.prob.statespace.AnimationSelector
 import de.prob.statespace.StateSpace
@@ -49,26 +51,12 @@ class ProBKernel @Inject constructor(private val injector : Injector,
         animator.addWarningListener(informationListener)
 
         Communicator.sendDebugMessage("loading new machine", MessageType.Info)
-        val errors = mutableListOf<ErrorItem>()
 
-        val strictProblems = loadMachine(
-                {
-                    stateSpace : StateSpace ->
-                    try {
-                        factory.extract(path).loadIntoStateSpace(stateSpace)
-                    } catch (e: IOException) {
-                        communicator.sendDebugMessage("IOException ${e.message}", MessageType.Info)
-                    } catch (e: ModelTranslationError) {
-                        communicator.sendDebugMessage("ModelTranslationError ${e.message}", MessageType.Info)
-                    } catch (e : ProBError){
-                        errors.addAll(e.errors)
-                    }
-                    Trace(stateSpace)
-                }, settings, path)
+        val problems = loadMachine(settings, path, factory)
 
-        communicator.sendDebugMessage("returning from kernel problems are ${strictProblems.toString()}", MessageType.Info)
+        communicator.sendDebugMessage("returning from kernel problems are ${problems.toString()}", MessageType.Info)
 
-        return listOf(informationListener.getInformation(), strictProblems, convertErrorItems(errors, path)).flatten()
+        return listOf(informationListener.getInformation(), problems).flatten()
     }
 
     /**
@@ -76,36 +64,44 @@ class ProBKernel @Inject constructor(private val injector : Injector,
      * @param newTraceCreator a anonymous function dealing with the state space
      * @param settings the settings to be applied
      */
-    private fun loadMachine(newTraceCreator :java.util.function.Function<StateSpace, Trace>, settings: ProBSettings,
-                            path : String): List<Diagnostic> {
+    private fun loadMachine(settings: ProBSettings, path : String, factory : ModelFactory<*>): List<Diagnostic> {
         communicator.sendDebugMessage("creating new state space", MessageType.Info)
 
         val newStateSpace = animator.createStateSpace()
         communicator.sendDebugMessage("setting preferences", MessageType.Info)
         newStateSpace.changePreferences(prepareAdditionalSettings(settings))
-        val errors = mutableListOf<ErrorItem>()
-        try {
-            communicator.sendDebugMessage("changing animation", MessageType.Info)
-            animationSelector.changeCurrentAnimation(newTraceCreator.apply(newStateSpace))
-            communicator.sendDebugMessage("done", MessageType.Info)
 
-            communicator.sendDebugMessage("executing optional steps", MessageType.Info)
-            executeAdditionalOptions(settings)
+        val errors = mutableListOf<ErrorItem>()
+
+        try {
+            factory.extract(path).loadIntoStateSpace(newStateSpace)
+        } catch (e: IOException) {
+            communicator.sendDebugMessage("IOException ${e.message}", MessageType.Info)
+        } catch (e: ModelTranslationError) {
+            communicator.sendDebugMessage("ModelTranslationError ${e.message}", MessageType.Info)
+        } catch (e : ProBError){
+            errors.addAll(e.errors)
+        }
+
+        if(errors.none { errorItem -> errorItem.type == ErrorItem.Type.ERROR }) {
+            communicator.sendDebugMessage("No fatal errors found, continuing with option steps...", MessageType.Info)
 
             if (settings.strictChecks) {
                 errors.addAll(newStateSpace.performExtendedStaticChecks())
             }
 
-            communicator.sendDebugMessage("finished evaluation", MessageType.Info)
+            try {
+                communicator.sendDebugMessage("executing optional steps", MessageType.Info)
+                executeAdditionalOptions(settings)
+            } catch (e: RuntimeException) {
+                communicator.sendDebugMessage("something bad happened, statespace was killed", MessageType.Warning)
+                newStateSpace.kill()
+            }
 
-        }catch (e: RuntimeException) {
-            communicator.sendDebugMessage("something bad happened, statespace was killed", MessageType.Warning)
-            newStateSpace.kill()
-            throw e
         }
 
         communicator.sendDebugMessage("processing errors", MessageType.Info)
-
+        newStateSpace.kill()
         return convertErrorItems(errors, path)
     }
 
