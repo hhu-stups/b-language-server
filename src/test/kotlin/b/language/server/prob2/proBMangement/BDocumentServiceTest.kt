@@ -90,7 +90,7 @@ class BDocumentServiceTest {
      * Fakes the behavior of the user by returning no errors when called the second time
      * The user fixed the errors
      */
-    class DummyProBKernelManager(val communicator : CommunicatorInterface) : ProBInterface{
+    class DummyProBKernelManager(private val communicator : CommunicatorInterface) : ProBInterface{
 
         private var counter = 0
 
@@ -167,7 +167,6 @@ class BDocumentServiceTest {
         documentService.checkDocument("src/test/resources/WD_M2.mch")
 
         println(communicator.pushedDiagnostics)
-        val targetSet =  communicator.pushedDiagnostics.entries.first().value.map { value -> value.source }.toSet()
 
         assertEquals(emptyList(), communicator.pushedDiagnostics.entries.first().value)
     }
