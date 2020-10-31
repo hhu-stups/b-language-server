@@ -2,24 +2,25 @@ package b.language.server
 
 import b.language.server.communication.Communicator
 import b.language.server.dataStorage.Settings
+import b.language.server.proBMangement.prob.ProBKernelManager
 import com.google.gson.JsonObject
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
-import org.eclipse.lsp4j.jsonrpc.services.JsonNotification
 import org.eclipse.lsp4j.services.*
 import java.util.concurrent.CompletableFuture
 import kotlin.collections.HashMap
 import kotlin.system.exitProcess
-import org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint
 
 class Server : LanguageServer{
 
-    private val textDocumentService : TextDocumentService = BDocumentService(this, Communicator)
-    private val bWorkspaceService : WorkspaceService = BWorkspaceService(this)
-     lateinit var languageClient : LanguageClient
+    private val textDocumentService : TextDocumentService = BDocumentService(this, Communicator, ProBKernelManager(Communicator))
+    private val bWorkspaceService : WorkspaceService = BWorkspaceService(this, Communicator)
+    private lateinit var languageClient : LanguageClient
     var globalSettings : Settings = Settings()
     val documentSettings : HashMap<String, CompletableFuture<Settings>> = HashMap()
     var configurationAbility : Boolean = true
+
+
 
 
     override fun initialize(params: InitializeParams?): CompletableFuture<InitializeResult> {
@@ -27,10 +28,7 @@ class Server : LanguageServer{
         res.capabilities.textDocumentSync = Either.forLeft(TextDocumentSyncKind.Full)
         res.capabilities.workspace = WorkspaceServerCapabilities(WorkspaceFoldersOptions())
         res.capabilities.workspace.workspaceFolders.supported = true
-
-      //  languageClient.registerCapability(
-        //        RegistrationParams(listOf(Registration("all_config_changes", "didChangeConfiguration" , bWorkspaceService))))
-
+       // res.capabilities.completionProvider = CompletionOptions()
         return CompletableFuture.supplyAsync { res }
     }
 
@@ -73,9 +71,6 @@ class Server : LanguageServer{
     }
 
 
-
-
-
     /**
      * Get the settings for the current document - will fallback to global settings eventually; If setting not cached
      * method will try to get setting from the client
@@ -83,7 +78,7 @@ class Server : LanguageServer{
      * @return settings of the document requested
      */
     fun getDocumentSettings(uri : String) : CompletableFuture<Settings> {
-        Communicator.bufferDebugMessage("received configuration data of the document $uri", MessageType.Info)
+        Communicator.sendDebugMessage("requesting configuration for document: $uri", MessageType.Info)
         return if(!configurationAbility){
             val returnValue = CompletableFuture<Settings>()
             returnValue.complete(globalSettings)
@@ -93,11 +88,15 @@ class Server : LanguageServer{
             val configurationItem = ConfigurationItem()
             configurationItem.scopeUri = uri
             configurationItem.section = "languageServer"
+
             val requestedConfig = languageClient.configuration(ConfigurationParams(listOf(configurationItem)))
             documentSettings[uri] = CompletableFuture.allOf(requestedConfig).thenApply{ castJsonToSetting(requestedConfig.get().first() as JsonObject) }
             documentSettings[uri]!!
         }
     }
+
+
+
 
 
 }

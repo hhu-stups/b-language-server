@@ -1,6 +1,6 @@
 {
   "name": "b-language-server",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "a java based language server implementing the lsp",
   "main": "index.js",
   "scripts": {

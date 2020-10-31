@@ -7,7 +7,7 @@
 
 plugins {
     // Apply the Kotlin JVM plugin to add support for Kotlin.
-    id("org.jetbrains.kotlin.jvm") version "1.3.72"
+    kotlin("jvm") version "1.4.0"
     idea
     // Apply the application plugin to add support for building a CLI application.
     application
@@ -19,7 +19,12 @@ plugins {
 repositories {
     // Use jcenter for resolving dependencies.
     jcenter()
+
+    maven("https://oss.sonatype.org/content/repositories/snapshots")
+
 }
+
+
 
 dependencies {
     // Align versions of all Kotlin components
@@ -27,6 +32,10 @@ dependencies {
 
     // Use the Kotlin JDK 8 standard library.
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9")
+
 
     // eclipse lsp implementation
     implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j",  "0.9.0")
@@ -41,8 +50,19 @@ dependencies {
     // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
     testImplementation("org.junit.jupiter","junit-jupiter-engine" ,  "5.7.0-M1")
 
+    implementation("de.hhu.stups:de.prob2.kernel:4.0.0-SNAPSHOT")
+
+    implementation( "com.google.guava", "guava", "28.2-jre")
+
+
+    // https://mvnrepository.com/artifact/org.zeromq/jeromq
+    implementation ("org.zeromq",   "jeromq", "0.5.2")
+
 
 }
+
+
+
 
 
 tasks.test {
@@ -50,6 +70,12 @@ tasks.test {
 }
 
 val gitVersion: groovy.lang.Closure<*> by extra
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>(){
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+
 tasks.shadowJar{
   //  this.version = gitVersion().toString()
 }

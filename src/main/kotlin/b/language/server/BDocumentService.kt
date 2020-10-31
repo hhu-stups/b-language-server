@@ -1,17 +1,15 @@
 package b.language.server
 
 import b.language.server.communication.CommunicatorInterface
-import b.language.server.proBMangement.probCli.CommandCouldNotBeExecutedException
-import b.language.server.proBMangement.probCli.PathCouldNotBeCreatedException
 import b.language.server.proBMangement.ProBInterface
-import b.language.server.proBMangement.probCli.ProBCommandLineAccess
+import b.language.server.proBMangement.prob.CouldNotFindProBHomeException
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.TextDocumentService
-import java.io.IOException
-import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 
-class BDocumentService(private val server: Server, private val communicator: CommunicatorInterface) : TextDocumentService {
+class BDocumentService(private val server: Server,
+                       private val communicator: CommunicatorInterface,
+                       private val proBInterface: ProBInterface) : TextDocumentService {
 
     private val documents = ConcurrentHashMap<String, String>()
     private val issueTracker : ConcurrentHashMap<String, Set<String>> = ConcurrentHashMap()
@@ -36,7 +34,7 @@ class BDocumentService(private val server: Server, private val communicator: Com
      */
     override fun didSave(params: DidSaveTextDocumentParams?) {
 
-        communicator.bufferDebugMessage("document ${params!!.textDocument.uri} was saved", MessageType.Info)
+        communicator.sendDebugMessage("document ${params!!.textDocument.uri} was saved", MessageType.Info)
         val currentUri = params.textDocument.uri
         checkDocument(currentUri)
 
@@ -49,7 +47,7 @@ class BDocumentService(private val server: Server, private val communicator: Com
     fun checkDocument(currentUri : String){
 
         val clientSettings = server.getDocumentSettings(currentUri)
-        communicator.bufferDebugMessage("waiting for document settings", MessageType.Info)
+        communicator.sendDebugMessage("waiting for document settings", MessageType.Info)
 
         clientSettings.thenAccept{ settings ->
             communicator.setDebugMode(settings.debugMode)
@@ -69,15 +67,9 @@ class BDocumentService(private val server: Server, private val communicator: Com
                 communicator.sendDebugMessage("invalidating old files $invalidFiles", MessageType.Info)
                 issueTracker[currentUri] = filesWithProblems.toSet()
 
-            }catch (e : PathCouldNotBeCreatedException){
-                communicator.sendDebugMessage("error path could not be created", MessageType.Info)
-                communicator.showMessage(e.message!!, MessageType.Error)
-            }catch (e : CommandCouldNotBeExecutedException){
-                communicator.sendDebugMessage("command could not be executed", MessageType.Info)
-                communicator.showMessage(e.message!!, MessageType.Error)
-            }catch (e : IOException){
-                communicator.sendDebugMessage("command could not be executed", MessageType.Info)
-                communicator.showMessage(e.message!!, MessageType.Error)
+            }catch (e : CouldNotFindProBHomeException){
+                communicator.sendDebugMessage(e.message!!, MessageType.Info)
+                communicator.showMessage(e.message, MessageType.Error)
             }
         }
 
@@ -113,7 +105,7 @@ class BDocumentService(private val server: Server, private val communicator: Com
      * Registration Options: TextDocumentChangeRegistrationOptions
      */
     override fun didChange(params: DidChangeTextDocumentParams?) {
-        communicator.bufferDebugMessage("document ${params!!.textDocument.uri} was changed", MessageType.Info)
+        communicator.sendDebugMessage("document ${params!!.textDocument.uri} was changed", MessageType.Info)
         val currentUri = params.textDocument.uri
         checkDocument(currentUri)
     }
