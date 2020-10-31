@@ -11,7 +11,7 @@ import java.util.concurrent.CompletableFuture
 import kotlin.collections.HashMap
 import kotlin.system.exitProcess
 
-class Server : LanguageServer{
+class Server : LanguageServer, ServerInterface {
 
     private val textDocumentService : TextDocumentService = BDocumentService(this, Communicator, ProBKernelManager(Communicator))
     private val bWorkspaceService : WorkspaceService = BWorkspaceService(this, Communicator)
@@ -77,7 +77,7 @@ class Server : LanguageServer{
      * @param uri the uri of the document requested
      * @return settings of the document requested
      */
-    fun getDocumentSettings(uri : String) : CompletableFuture<Settings> {
+    override fun getDocumentSettings(uri : String) : CompletableFuture<Settings> {
         Communicator.sendDebugMessage("requesting configuration for document: $uri", MessageType.Info)
         return if(!configurationAbility){
             val returnValue = CompletableFuture<Settings>()
@@ -93,6 +93,10 @@ class Server : LanguageServer{
             documentSettings[uri] = CompletableFuture.allOf(requestedConfig).thenApply{ castJsonToSetting(requestedConfig.get().first() as JsonObject) }
             documentSettings[uri]!!
         }
+    }
+
+    override fun removeDocumentSettings(uri: String) {
+        documentSettings.remove(uri)
     }
 
 

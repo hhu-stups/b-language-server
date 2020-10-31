@@ -1,5 +1,6 @@
 package b.language.server.communication
 
+import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.MessageParams
 import org.eclipse.lsp4j.MessageType
 import org.eclipse.lsp4j.PublishDiagnosticsParams
@@ -16,13 +17,15 @@ object Communicator : CommunicatorInterface {
 
     private var debugMode : Boolean = true
 
+
     /**
      * Sends the diagnostics
      *
      * @param diagnostics object containing the Diagnostics
      */
-    override fun publishDiagnostics(diagnostics: PublishDiagnosticsParams) {
-        client.publishDiagnostics(diagnostics)
+    override fun publishDiagnostics(target: String, diagnostics: List<Diagnostic>) {
+        client.publishDiagnostics(PublishDiagnosticsParams(target, diagnostics))
+
     }
 
     /**
@@ -57,5 +60,14 @@ object Communicator : CommunicatorInterface {
      */
     override fun setDebugMode(mode : Boolean){
         debugMode = mode
+    }
+
+    /**
+     * Can be used to store a messages until a "sendDebugMessage" command is sent. The messages will be sent as FIFO
+     * @param message the message to send
+     * @param severity tne message severity
+     */
+    override fun bufferDebugMessage(message: String, severity: MessageType) {
+        TODO("Not yet implemented")
     }
 }

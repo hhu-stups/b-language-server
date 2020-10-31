@@ -12,9 +12,7 @@ import kotlin.test.assertEquals
 
 class UtilTest {
 
-    /**
-     * as we using functional programming we don´t test the logic but the functionality
-     */
+
     @Test
     fun generateErrorItem()
     {
@@ -34,7 +32,7 @@ class UtilTest {
                          Position(endLine-1, endCol)),
                  message, DiagnosticSeverity.Error, file)
 
-        val errorItemAfter = convertErrorItems(listOf(errorItem)).first()
+        val errorItemAfter = convertErrorItems(listOf(errorItem), "dummy").first()
 
         assertEquals(diagnostic, errorItemAfter)
 

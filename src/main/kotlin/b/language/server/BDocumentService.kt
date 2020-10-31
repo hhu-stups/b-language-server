@@ -7,7 +7,7 @@ import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.TextDocumentService
 import java.util.concurrent.ConcurrentHashMap
 
-class BDocumentService(private val server: Server,
+class BDocumentService(private val server: ServerInterface,
                        private val communicator: CommunicatorInterface,
                        private val proBInterface: ProBInterface) : TextDocumentService {
 
@@ -51,11 +51,10 @@ class BDocumentService(private val server: Server,
 
         clientSettings.thenAccept{ settings ->
             communicator.setDebugMode(settings.debugMode)
-            val prob : ProBInterface = ProBCommandLineAccess(communicator)
             communicator.sendDebugMessage("settings are $settings", MessageType.Info)
 
             try{
-                val diagnostics: List<Diagnostic> = prob.checkDocument(currentUri, settings)
+                val diagnostics: List<Diagnostic> = proBInterface.checkDocument(currentUri, settings)
 
                 val sortedDiagnostic = diagnostics.groupBy { it.source }
                 sortedDiagnostic.forEach { entry -> communicator.publishDiagnostics(entry.key, entry.value)}
@@ -74,6 +73,7 @@ class BDocumentService(private val server: Server,
         }
 
     }
+
 
     /**
      * Gets all uris that are no longer contain problems
@@ -95,7 +95,7 @@ class BDocumentService(private val server: Server,
      */
     override fun didClose(params: DidCloseTextDocumentParams?) {
         communicator.sendDebugMessage("document ${params!!.textDocument.uri} was closed - removing meta data", MessageType.Info)
-        server.documentSettings.remove(params.textDocument.uri)
+        server.removeDocumentSettings(params.textDocument.uri)
     }
 
     /**

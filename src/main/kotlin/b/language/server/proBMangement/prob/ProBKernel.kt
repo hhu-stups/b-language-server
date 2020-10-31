@@ -42,15 +42,16 @@ class ProBKernel @Inject constructor(private val injector : Injector,
      * @return a list with the problems found
      */
     fun check(path : String, settings : ProBSettings) : List<Diagnostic>{
-        Communicator.sendDebugMessage("unloading old machine", MessageType.Info)
+        communicator.sendDebugMessage("unloading old machine", MessageType.Info)
         unloadMachine()
+
 
         val factory = injector.getInstance(FactoryProvider.factoryClassFromExtension(path.substringAfterLast(".")))
 
         val informationListener = InformationListener(path)
         animator.addWarningListener(informationListener)
 
-        Communicator.sendDebugMessage("loading new machine", MessageType.Info)
+        communicator.sendDebugMessage("loading new machine", MessageType.Info)
 
         val problems = loadMachine(settings, path, factory)
 
@@ -122,12 +123,14 @@ class ProBKernel @Inject constructor(private val injector : Injector,
      * to clean up a machine
      */
     private fun unloadMachine() {
+
         val oldTrace = animationSelector.currentTrace
         if (oldTrace != null) {
             assert(oldTrace.stateSpace === animator.currentStateSpace)
             animationSelector.changeCurrentAnimation(null)
             oldTrace.stateSpace.kill()
         }
+
     }
 
 
