@@ -42,7 +42,7 @@ class BDocumentService(private val server: ServerInterface,
 
     /**
      * checks a document via prob an the set options
-     * @param the uri to perform actions on
+     * @param currentUri the uri to perform actions on
      */
     fun checkDocument(currentUri : String){
 
@@ -80,7 +80,7 @@ class BDocumentService(private val server: ServerInterface,
      * @param currentUri the uri of the current main file
      * @param filesWithProblems uris of files containing problems
      */
-    fun calculateToInvalidate(currentUri : String, filesWithProblems : List<String>) : List<String>{
+    private fun calculateToInvalidate(currentUri : String, filesWithProblems : List<String>) : List<String>{
         val currentlyDisplayed = issueTracker[currentUri].orEmpty()
         return currentlyDisplayed.subtract(filesWithProblems).toList()
     }

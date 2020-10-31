@@ -7,7 +7,7 @@ import org.eclipse.lsp4j.Diagnostic
 /**
  * Custom collector to collect warnings from prob kernel
  */
-class InformationListener(val fallbackPath : String) : IWarningListener {
+class InformationListener(private val fallbackPath : String) : IWarningListener {
     private val warningList : ArrayList<ErrorItem> = arrayListOf()
 
 

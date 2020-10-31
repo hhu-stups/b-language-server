@@ -55,15 +55,16 @@ class ProBKernel @Inject constructor(private val injector : Injector,
 
         val problems = loadMachine(settings, path, factory)
 
-        communicator.sendDebugMessage("returning from kernel problems are ${problems.toString()}", MessageType.Info)
+        communicator.sendDebugMessage("returning from kernel problems are ${problems}", MessageType.Info)
 
         return listOf(informationListener.getInformation(), problems).flatten()
     }
 
     /**
      * Does the main work
-     * @param newTraceCreator a anonymous function dealing with the state space
-     * @param settings the settings to be applied
+     * @param settings the settings of the document
+     * @param path the path to the document
+     * @param factory a factory
      */
     private fun loadMachine(settings: ProBSettings, path : String, factory : ModelFactory<*>): List<Diagnostic> {
         communicator.sendDebugMessage("creating new state space", MessageType.Info)
