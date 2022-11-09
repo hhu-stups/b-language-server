@@ -1,24 +1,17 @@
 package b.language.server.proBMangement.prob
 
 
-import b.language.server.communication.Communicator
 import b.language.server.communication.CommunicatorInterface
 import b.language.server.dataStorage.ProBSettings
 import com.google.inject.Inject
 import com.google.inject.Injector
 import de.prob.animator.ReusableAnimator
 import de.prob.animator.command.CheckWellDefinednessCommand
-import de.prob.animator.command.GetMachineOperationInfos
 import de.prob.animator.domainobjects.ErrorItem
 import de.prob.exception.ProBError
-import de.prob.scripting.ClassicalBFactory
 import de.prob.scripting.FactoryProvider
 import de.prob.scripting.ModelFactory
-import de.prob.scripting.ModelTranslationError
 import de.prob.statespace.AnimationSelector
-import de.prob.statespace.StateSpace
-import de.prob.statespace.Trace
-import kotlinx.coroutines.flow.flowViaChannel
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.MessageType
 import java.io.IOException
@@ -29,7 +22,6 @@ import java.io.IOException
  * @see ProBKernelManager
  */
 class ProBKernel @Inject constructor(private val injector : Injector,
-                                     val classicalBFactory : ClassicalBFactory,
                                      private val animationSelector: AnimationSelector,
                                      private val animator : ReusableAnimator,
                                      private val communicator : CommunicatorInterface) {
@@ -55,7 +47,7 @@ class ProBKernel @Inject constructor(private val injector : Injector,
 
         val problems = loadMachine(settings, path, factory)
 
-        communicator.sendDebugMessage("returning from kernel problems are ${problems}", MessageType.Info)
+        communicator.sendDebugMessage("returning from kernel problems are $problems", MessageType.Info)
 
         return listOf(informationListener.getInformation(), problems).flatten()
     }
@@ -79,8 +71,6 @@ class ProBKernel @Inject constructor(private val injector : Injector,
             factory.extract(path).loadIntoStateSpace(newStateSpace)
         } catch (e: IOException) {
             communicator.sendDebugMessage("IOException ${e.message}", MessageType.Info)
-        } catch (e: ModelTranslationError) {
-            communicator.sendDebugMessage("ModelTranslationError ${e.message}", MessageType.Info)
         } catch (e : ProBError){
             errors.addAll(e.errors)
         }
