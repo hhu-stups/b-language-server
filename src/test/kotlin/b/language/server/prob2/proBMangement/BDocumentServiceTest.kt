@@ -144,7 +144,7 @@ class BDocumentServiceTest {
         val targetSet =  communicator.pushedDiagnostics.entries.first().value.map { value -> value.source }.toSet()
 
 
-          assertEquals(1, communicator.pushedDiagnostics.entries.size)
+        assertEquals(2, communicator.pushedDiagnostics.entries.size)
         assertEquals(2, communicator.pushedDiagnostics.entries.first().value.size)
         assertTrue(targetSet.first().contains("b-language-server/src/test/resources/WD_M1.mch"))
 
