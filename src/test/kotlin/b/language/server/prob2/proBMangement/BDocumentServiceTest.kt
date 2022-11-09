@@ -114,14 +114,13 @@ class BDocumentServiceTest {
 
         val documentService = BDocumentService(DummyServer(), communicator, ProBKernelManager(communicator))
 
-        //Filling the internel state with some information
         documentService.checkDocument("src/test/resources/WD_M1.mch")
 
         val targetSet =  communicator.pushedDiagnostics.entries.first().value.map { value -> value.source }.toSet()
 
 
         assertEquals(1, communicator.pushedDiagnostics.entries.size)
-        assertEquals(2, communicator.pushedDiagnostics.entries.first().value.size)
+        assertEquals(3, communicator.pushedDiagnostics.entries.first().value.size)
         assertTrue(targetSet.first().contains("b-language-server/src/test/resources/WD_M1.mch"))
 
     }
@@ -134,7 +133,6 @@ class BDocumentServiceTest {
 
         val documentService = BDocumentService(DummyServer(), communicator, ProBKernelManager(communicator))
 
-        //Filling the internel state with some information
         documentService.checkDocument("src/test/resources/WD_M2.mch")
 
         communicator.pushedDiagnostics.clear()
@@ -161,7 +159,6 @@ class BDocumentServiceTest {
 
         val documentService = BDocumentService(DummyServer(), communicator, DummyProBKernelManager(communicator))
 
-        //Filling the internel state with some information
         documentService.checkDocument("src/test/resources/WD_M2.mch")
 
         documentService.checkDocument("src/test/resources/WD_M2.mch")
