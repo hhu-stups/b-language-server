@@ -2,7 +2,6 @@ package b.language.server.communication
 
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.MessageType
-import org.eclipse.lsp4j.PublishDiagnosticsParams
 
 /**
  * Describes the basic functions used to communicate with the outside world

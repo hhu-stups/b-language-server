@@ -8,7 +8,7 @@ import org.eclipse.lsp4j.MessageType
 import org.eclipse.lsp4j.services.WorkspaceService
 
 
-class BWorkspaceService(private val server: Server, val communicator: Communicator) : WorkspaceService {
+class BWorkspaceService(private val server: Server, private val communicator: Communicator) : WorkspaceService {
     /**
      * The watched files notification is sent from the client to the server when
      * the client detects changes to file watched by the language client.
