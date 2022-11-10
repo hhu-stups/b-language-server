@@ -77,10 +77,7 @@ class ProBKernelManager(private val communicator : CommunicatorInterface) : ProB
      *
      * @throws CouldNotFindProBHomeException the given path ist not "DEFAULT" and wrong
      */
-    override fun checkDocument(uri: String, settings: Settings): List<Diagnostic> {
-
-        val path = URI(uri).path
-       //Files.exists(Path.of(URI(uri)))
+    override fun checkDocument(uri: URI, settings: Settings): List<Diagnostic> {
 
         communicator.sendDebugMessage("try to use ${settings.probHome} as prob version instead of " + System.getProperty("prob.home"), MessageType.Info)
         val result = checkProBVersionSetting(settings.probHome)
@@ -91,7 +88,7 @@ class ProBKernelManager(private val communicator : CommunicatorInterface) : ProB
 
         communicator.sendDebugMessage("success!", MessageType.Info)
         communicator.sendDebugMessage("checking document", MessageType.Info)
-        return kernel.check(path, ProBSettings(wdChecks = settings.wdChecks, strictChecks = settings.strictChecks,
+        return kernel.check(uri, ProBSettings(wdChecks = settings.wdChecks, strictChecks = settings.strictChecks,
                 performanceHints = settings.performanceHints))
     }
 }

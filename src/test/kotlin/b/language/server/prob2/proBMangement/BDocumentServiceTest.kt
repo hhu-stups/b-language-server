@@ -9,6 +9,8 @@ import b.language.server.proBMangement.prob.ProBKernelManager
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.MessageType
 import org.junit.jupiter.api.Test
+import java.io.File
+import java.net.URI
 import java.util.concurrent.CompletableFuture
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -56,7 +58,6 @@ class BDocumentServiceTest {
          * @param mode the new state of the debug mode
          */
         override fun setDebugMode(mode: Boolean) {
-
             //void
         }
 
@@ -94,7 +95,7 @@ class BDocumentServiceTest {
 
         private var counter = 0
 
-        override fun checkDocument(uri: String, settings: Settings): List<Diagnostic> {
+        override fun checkDocument(uri: URI, settings: Settings): List<Diagnostic> {
             return if(counter == 0){
                 counter++
                 val realKernel = ProBKernelManager(communicator)
@@ -114,7 +115,9 @@ class BDocumentServiceTest {
 
         val documentService = BDocumentService(DummyServer(), communicator, ProBKernelManager(communicator))
 
-        documentService.checkDocument("src/test/resources/WD_M1.mch")
+
+
+        documentService.checkDocument(URI("src/test/resources/WD_M1.mch"))
 
         val targetSet =  communicator.pushedDiagnostics.entries.first().value.map { value -> value.source }.toSet()
 
@@ -133,20 +136,22 @@ class BDocumentServiceTest {
 
         val documentService = BDocumentService(DummyServer(), communicator, ProBKernelManager(communicator))
 
-        documentService.checkDocument("src/test/resources/WD_M2.mch")
+        val documentToCheck = URI("src/test/resources/WD_M2.mch")
+
+        val expectedDocument = "src/test/resources/WD_M1.mch"
+
+
+        documentService.checkDocument(documentToCheck)
 
         communicator.pushedDiagnostics.clear()
 
-        documentService.checkDocument("src/test/resources/WD_M2.mch")
-
-        println(communicator.pushedDiagnostics.size)
+        documentService.checkDocument(documentToCheck)
 
         val targetSet =  communicator.pushedDiagnostics.entries.first().value.map { value -> value.source }.toSet()
 
-
         assertEquals(2, communicator.pushedDiagnostics.entries.size)
         assertEquals(3, communicator.pushedDiagnostics.entries.first().value.size)
-        assertTrue(targetSet.first().contains("b-language-server/src/test/resources/WD_M1.mch"))
+        assertEquals(File(expectedDocument).absolutePath, targetSet.first())
 
     }
 
@@ -159,12 +164,19 @@ class BDocumentServiceTest {
 
         val documentService = BDocumentService(DummyServer(), communicator, DummyProBKernelManager(communicator))
 
-        documentService.checkDocument("src/test/resources/WD_M2.mch")
+        documentService.checkDocument(URI("src/test/resources/WD_M2.mch"))
 
-        documentService.checkDocument("src/test/resources/WD_M2.mch")
-
-        println(communicator.pushedDiagnostics)
+        documentService.checkDocument(URI("src/test/resources/WD_M2.mch"))
 
         assertEquals(emptyList(), communicator.pushedDiagnostics.entries.first().value)
     }
+
+    /**
+     * Write Tests:
+     * Test different options you can turn on and off
+     * strict, WD, performance
+     * Included files have errors and errors are mapped properly
+     * Included files have no errors
+     * Included files have
+     */
 }

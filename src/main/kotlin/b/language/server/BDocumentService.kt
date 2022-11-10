@@ -5,6 +5,7 @@ import b.language.server.proBMangement.ProBInterface
 import b.language.server.proBMangement.prob.CouldNotFindProBHomeException
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.TextDocumentService
+import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 
 class BDocumentService(private val server: ServerInterface,
@@ -35,18 +36,19 @@ class BDocumentService(private val server: ServerInterface,
     override fun didSave(params: DidSaveTextDocumentParams?) {
 
         communicator.sendDebugMessage("document ${params!!.textDocument.uri} was saved", MessageType.Info)
-        val currentUri = params.textDocument.uri
-        checkDocument(currentUri)
+        checkDocument(URI(params.textDocument.uri))
 
     }
 
     /**
-     * checks a document via prob an the set options
+     * checks a document via prob and the set options
      * @param currentUri the uri to perform actions on
      */
-    fun checkDocument(currentUri : String){
+    fun checkDocument(currentUri : URI){
 
-        val clientSettings = server.getDocumentSettings(currentUri)
+
+
+        val clientSettings = server.getDocumentSettings(currentUri.path)
         communicator.sendDebugMessage("waiting for document settings", MessageType.Info)
 
         clientSettings.thenAccept{ settings ->
@@ -61,10 +63,10 @@ class BDocumentService(private val server: ServerInterface,
                 communicator.showMessage("Evaluation done: ${diagnostics.size} problem(s)", MessageType.Log)
 
                 val filesWithProblems = sortedDiagnostic.keys.toList()
-                val invalidFiles = calculateToInvalidate(currentUri, filesWithProblems)
+                val invalidFiles = calculateToInvalidate(currentUri.path, filesWithProblems)
                 invalidFiles.forEach{uri -> communicator.publishDiagnostics(uri, listOf())}
                 communicator.sendDebugMessage("invalidating old files $invalidFiles", MessageType.Info)
-                issueTracker[currentUri] = filesWithProblems.toSet()
+                issueTracker[currentUri.path] = filesWithProblems.toSet()
 
             }catch (e : CouldNotFindProBHomeException){
                 communicator.sendDebugMessage(e.message!!, MessageType.Info)
@@ -106,8 +108,7 @@ class BDocumentService(private val server: ServerInterface,
      */
     override fun didChange(params: DidChangeTextDocumentParams?) {
         communicator.sendDebugMessage("document ${params!!.textDocument.uri} was changed", MessageType.Info)
-        val currentUri = params.textDocument.uri
-        checkDocument(currentUri)
+        checkDocument(URI(params.textDocument.uri))
     }
 
 }

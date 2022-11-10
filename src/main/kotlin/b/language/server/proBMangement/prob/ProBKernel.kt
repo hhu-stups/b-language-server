@@ -15,6 +15,7 @@ import de.prob.statespace.AnimationSelector
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.MessageType
 import java.io.IOException
+import java.net.URI
 
 /**
  * Represents the interface to communicate with prob kernel
@@ -33,14 +34,15 @@ class ProBKernel @Inject constructor(private val injector : Injector,
      * @param settings the settings under which the check takes place
      * @return a list with the problems found
      */
-    fun check(path : String, settings : ProBSettings) : List<Diagnostic>{
+    fun check(path : URI, settings : ProBSettings) : List<Diagnostic>{
         communicator.sendDebugMessage("unloading old machine", MessageType.Info)
         unloadMachine()
 
 
-        val factory = injector.getInstance(FactoryProvider.factoryClassFromExtension(path.substringAfterLast(".")))
 
-        val informationListener = InformationListener(path)
+        val factory = injector.getInstance(FactoryProvider.factoryClassFromExtension(path.path.substringAfterLast(".")))
+
+        val informationListener = InformationListener(path.path)
         animator.addWarningListener(informationListener)
 
         communicator.sendDebugMessage("loading new machine", MessageType.Info)
@@ -58,7 +60,7 @@ class ProBKernel @Inject constructor(private val injector : Injector,
      * @param path the path to the document
      * @param factory a factory
      */
-    private fun loadMachine(settings: ProBSettings, path : String, factory : ModelFactory<*>): List<Diagnostic> {
+    private fun loadMachine(settings: ProBSettings, path : URI, factory : ModelFactory<*>): List<Diagnostic> {
         communicator.sendDebugMessage("creating new state space", MessageType.Info)
 
         val newStateSpace = animator.createStateSpace()
@@ -68,7 +70,7 @@ class ProBKernel @Inject constructor(private val injector : Injector,
         val errors = mutableListOf<ErrorItem>()
 
         try {
-            factory.extract(path).loadIntoStateSpace(newStateSpace)
+            factory.extract(path.path).loadIntoStateSpace(newStateSpace)
         } catch (e: IOException) {
             communicator.sendDebugMessage("IOException ${e.message}", MessageType.Info)
         } catch (e : ProBError){
@@ -94,7 +96,7 @@ class ProBKernel @Inject constructor(private val injector : Injector,
 
         communicator.sendDebugMessage("processing errors", MessageType.Info)
         newStateSpace.kill()
-        return convertErrorItems(errors, path)
+        return convertErrorItems(errors, path.path)
     }
 
 
