@@ -116,7 +116,8 @@ class BDocumentServiceTest {
         val documentService = BDocumentService(DummyServer(), communicator, ProBKernelManager(communicator))
 
 
-        val expectedDocument = File("b-language-server/src/test/resources/WD_M1.mch").absolutePath
+
+        val expectedDocument = File("src/test/resources/WD_M1.mch").absolutePath
 
         documentService.checkDocument(URI("src/test/resources/WD_M1.mch"))
 

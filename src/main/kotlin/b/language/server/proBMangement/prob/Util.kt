@@ -24,7 +24,7 @@ fun convertErrorItems(errorItems: List<ErrorItem>, currentLoadedFile : String) :
                     Position(0,0)),
                     errorItem.message,
                     getErrorItemType(errorItem.type),
-                    separatorToSystems(currentLoadedFile)))
+                    separatorToSystems(File(currentLoadedFile).absolutePath)))
         }
     }.flatten()
 }
