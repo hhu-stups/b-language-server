@@ -138,7 +138,7 @@ class BDocumentServiceTest {
 
         val documentToCheck = URI("src/test/resources/WD_M2.mch")
 
-        val expectedDocument = "src/test/resources/WD_M1.mch"
+        val expectedDocument = File("src/test/resources/WD_M1.mch").absolutePath
 
 
         documentService.checkDocument(documentToCheck)
@@ -151,7 +151,7 @@ class BDocumentServiceTest {
 
         assertEquals(2, communicator.pushedDiagnostics.entries.size)
         assertEquals(3, communicator.pushedDiagnostics.entries.first().value.size)
-        assertEquals(File(expectedDocument).absolutePath, targetSet.first())
+        assertEquals(expectedDocument, targetSet.first())
 
     }
 
