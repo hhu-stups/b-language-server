@@ -8,6 +8,7 @@ import org.eclipse.lsp4j.DiagnosticSeverity
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
 import org.junit.jupiter.api.Test
+import java.io.File
 import kotlin.test.assertEquals
 
 class UtilTest {
@@ -21,16 +22,16 @@ class UtilTest {
         val endLine = 101
         val endCol = 101
         val message = "hello"
-        val file = "/test"
+        val file = File("/test")
 
          val errorItem = ErrorItem(message, ErrorItem.Type.INTERNAL_ERROR,
-                 listOf(ErrorItem.Location(file, startLine,statCol,endLine,endCol)))
+                 listOf(ErrorItem.Location(file.absolutePath, startLine,statCol,endLine,endCol)))
 
          val diagnostic = Diagnostic(
                  Range(
                          Position(startLine-1, statCol),
                          Position(endLine-1, endCol)),
-                 message, DiagnosticSeverity.Error, file)
+                 message, DiagnosticSeverity.Error, file.absolutePath)
 
         val errorItemAfter = convertErrorItems(listOf(errorItem), "dummy").first()
 
