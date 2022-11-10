@@ -3,7 +3,7 @@ name: Build Jar
 on: [push]
 
 jobs:
-  build-java-11:
+  build-java-shadowjar:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
