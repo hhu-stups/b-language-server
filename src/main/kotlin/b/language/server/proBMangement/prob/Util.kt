@@ -5,6 +5,7 @@ import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.DiagnosticSeverity
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
+import java.io.File
 
 fun convertErrorItems(errorItems: List<ErrorItem>, currentLoadedFile : String) : List<Diagnostic>{
     return  errorItems.map { errorItem ->
@@ -15,7 +16,7 @@ fun convertErrorItems(errorItems: List<ErrorItem>, currentLoadedFile : String) :
                     Position(location.endLine - 1, location.endColumn)),
                     errorItem.message,
                     getErrorItemType(errorItem.type),
-                    location.filename)
+                    separatorToSystems(location.filename))
 
         }.ifEmpty { //Fallback when errors from prob do not have position infos
             listOf(Diagnostic(Range(
@@ -23,9 +24,26 @@ fun convertErrorItems(errorItems: List<ErrorItem>, currentLoadedFile : String) :
                     Position(0,0)),
                     errorItem.message,
                     getErrorItemType(errorItem.type),
-                    currentLoadedFile))
+                    separatorToSystems(currentLoadedFile)))
         }
     }.flatten()
+}
+
+/**
+ * ProB spits path out in linux writing which is okay, if we have only one root. However, in windows we can have multiple
+ * roots. The path needs then to be normalized for the given OS
+ *
+ * @param path the path to normalize
+ */
+fun separatorToSystems(path : String) : String{
+    return if (File.separatorChar=='\\') {
+        // From Windows to Linux/Mac
+        path.replace('/', File.separatorChar);
+    } else {
+        // From Linux/Mac to Windows
+        path.replace('\\', File.separatorChar);
+    }
+
 }
 
 fun getErrorItemType(errorItem: ErrorItem.Type) : DiagnosticSeverity{
