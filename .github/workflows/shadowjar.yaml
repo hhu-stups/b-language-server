@@ -2,7 +2,7 @@ name: Build Jar
 
 on: [push]
 
-
+jobs:
 build-java-11:
   runs-on: ubuntu-latest
   steps:
