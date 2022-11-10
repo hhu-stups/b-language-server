@@ -9,12 +9,14 @@ import org.eclipse.lsp4j.Range
 fun convertErrorItems(errorItems: List<ErrorItem>, currentLoadedFile : String) : List<Diagnostic>{
     return  errorItems.map { errorItem ->
         errorItem.locations.map { location ->
+            println(location.filename)
             Diagnostic(Range(
                     Position(location.startLine - 1, location.startColumn),
                     Position(location.endLine - 1, location.endColumn)),
                     errorItem.message,
                     getErrorItemType(errorItem.type),
                     location.filename)
+
         }.ifEmpty { //Fallback when errors from prob do not have position infos
             listOf(Diagnostic(Range(
                     Position(0,0),
