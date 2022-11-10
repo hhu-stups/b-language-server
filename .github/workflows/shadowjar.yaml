@@ -1,3 +1,8 @@
+name: Build Jar
+
+on: [push]
+
+
 build-java-11:
   runs-on: ubuntu-latest
   steps:
