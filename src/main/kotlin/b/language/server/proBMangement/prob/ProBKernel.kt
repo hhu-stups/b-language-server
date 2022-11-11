@@ -14,8 +14,9 @@ import de.prob.scripting.ModelFactory
 import de.prob.statespace.AnimationSelector
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.MessageType
+import java.io.File
 import java.io.IOException
-import java.net.URI
+import java.lang.Exception
 
 /**
  * Represents the interface to communicate with prob kernel
@@ -30,24 +31,22 @@ class ProBKernel @Inject constructor(private val injector : Injector,
 
     /**
      * Checks the given machine file; prepares all necessary object
-     * @param path the file to check
+     * @param file the file to check
      * @param settings the settings under which the check takes place
      * @return a list with the problems found
      */
-    fun check(path : URI, settings : ProBSettings) : List<Diagnostic>{
+    fun check(file : File, settings : ProBSettings) : List<Diagnostic>{
         communicator.sendDebugMessage("unloading old machine", MessageType.Info)
         unloadMachine()
 
+        val factory = injector.getInstance(FactoryProvider.factoryClassFromExtension(file.absolutePath.substringAfterLast(".")))
 
-
-        val factory = injector.getInstance(FactoryProvider.factoryClassFromExtension(path.path.substringAfterLast(".")))
-
-        val informationListener = InformationListener(path.path)
+        val informationListener = InformationListener(file, communicator)
         animator.addWarningListener(informationListener)
 
         communicator.sendDebugMessage("loading new machine", MessageType.Info)
 
-        val problems = loadMachine(settings, path, factory)
+        val problems = loadMachine(settings, file, factory)
 
         communicator.sendDebugMessage("returning from kernel problems are $problems", MessageType.Info)
 
@@ -57,10 +56,10 @@ class ProBKernel @Inject constructor(private val injector : Injector,
     /**
      * Does the main work
      * @param settings the settings of the document
-     * @param path the path to the document
+     * @param file the path to the document
      * @param factory a factory
      */
-    private fun loadMachine(settings: ProBSettings, path : URI, factory : ModelFactory<*>): List<Diagnostic> {
+    private fun loadMachine(settings: ProBSettings, file : File, factory : ModelFactory<*>): List<Diagnostic> {
         communicator.sendDebugMessage("creating new state space", MessageType.Info)
 
         val newStateSpace = animator.createStateSpace()
@@ -70,7 +69,7 @@ class ProBKernel @Inject constructor(private val injector : Injector,
         val errors = mutableListOf<ErrorItem>()
 
         try {
-            factory.extract(path.path).loadIntoStateSpace(newStateSpace)
+            factory.extract(file.absolutePath).loadIntoStateSpace(newStateSpace)
         } catch (e: IOException) {
             communicator.sendDebugMessage("IOException ${e.message}", MessageType.Info)
         } catch (e : ProBError){
@@ -96,7 +95,14 @@ class ProBKernel @Inject constructor(private val injector : Injector,
 
         communicator.sendDebugMessage("processing errors", MessageType.Info)
         newStateSpace.kill()
-        return convertErrorItems(errors, path.path)
+        var bla : List<Diagnostic> = emptyList()
+        try {
+            bla = convertErrorItems(errors, file, communicator)
+        }catch (e : Exception){
+            println(e)
+        }
+
+        return bla
     }
 
 

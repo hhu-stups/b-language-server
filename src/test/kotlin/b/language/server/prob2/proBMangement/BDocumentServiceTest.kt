@@ -1,5 +1,6 @@
 package b.language.server.prob2.proBMangement
 
+import DummyCommunicator
 import b.language.server.BDocumentService
 import b.language.server.ServerInterface
 import b.language.server.communication.CommunicatorInterface
@@ -7,70 +8,13 @@ import b.language.server.dataStorage.Settings
 import b.language.server.proBMangement.ProBInterface
 import b.language.server.proBMangement.prob.ProBKernelManager
 import org.eclipse.lsp4j.Diagnostic
-import org.eclipse.lsp4j.MessageType
 import org.junit.jupiter.api.Test
 import java.io.File
-import java.net.URI
 import java.util.concurrent.CompletableFuture
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class BDocumentServiceTest {
     
-    class DummyCommunicator : CommunicatorInterface{
-
-        val pushedDiagnostics :MutableMap<String, List<Diagnostic>> = mutableMapOf()
-
-
-
-        /**
-         * Sends the diagnostics
-         *
-         * @param diagnostics object containing the Diagnostics
-         */
-        override fun publishDiagnostics(target: String, diagnostics: List<Diagnostic>) {
-            pushedDiagnostics[target] = diagnostics
-        }
-
-        /**
-         * Sends a debug message resulting in a output channel message
-         *
-         * @param message the message to send
-         * @param severity the Severity of the message (Error/Info/Warning)
-         */
-        override fun sendDebugMessage(message: String, severity: MessageType) {
-           // println(message)
-        }
-
-        /**
-         * Sends a popup message resulting in a popup message
-         *
-         * @param message the message to send
-         * @param severity the Severity of the message (Error/Info/Warning)
-         */
-        override fun showMessage(message: String, severity: MessageType) {
-            //void
-        }
-
-        /**
-         * To enable/disable debug mode
-         *
-         * @param mode the new state of the debug mode
-         */
-        override fun setDebugMode(mode: Boolean) {
-            //void
-        }
-
-        /**
-         * Can be used to store a messages until a "sendDebugMessage" command is sent. The messages will be sent as FIFO
-         * @param message the message to send
-         * @param severity tne message severity
-         */
-        override fun bufferDebugMessage(message: String, severity: MessageType) {
-            //void
-        }
-
-    }
 
     class DummyServer : ServerInterface{
         override fun getDocumentSettings(uri: String): CompletableFuture<Settings> {
@@ -95,11 +39,11 @@ class BDocumentServiceTest {
 
         private var counter = 0
 
-        override fun checkDocument(uri: URI, settings: Settings): List<Diagnostic> {
+        override fun checkDocument(file: File, settings: Settings): List<Diagnostic> {
             return if(counter == 0){
                 counter++
                 val realKernel = ProBKernelManager(communicator)
-                realKernel.checkDocument(uri, settings)
+                realKernel.checkDocument(file, settings)
 
             }else{
                 listOf()
@@ -117,9 +61,11 @@ class BDocumentServiceTest {
 
 
 
+        val documentToCheck = File("src/test/resources/WD_M1.mch").absolutePath
+
         val expectedDocument = File("src/test/resources/WD_M1.mch").absolutePath
 
-        documentService.checkDocument(URI("src/test/resources/WD_M1.mch"))
+        documentService.checkDocument(File(documentToCheck))
 
         val targetSet =  communicator.pushedDiagnostics.entries.first().value.map { value -> value.source }.toSet()
 
@@ -138,16 +84,16 @@ class BDocumentServiceTest {
 
         val documentService = BDocumentService(DummyServer(), communicator, ProBKernelManager(communicator))
 
-        val documentToCheck = URI("src/test/resources/WD_M2.mch")
+        val documentToCheck = File("src/test/resources/WD_M2.mch").absolutePath
 
         val expectedDocument = File("src/test/resources/WD_M1.mch").absolutePath
 
 
-        documentService.checkDocument(documentToCheck)
+        documentService.checkDocument(File(documentToCheck))
 
         communicator.pushedDiagnostics.clear()
 
-        documentService.checkDocument(documentToCheck)
+        documentService.checkDocument(File(documentToCheck))
 
         val targetSet =  communicator.pushedDiagnostics.entries.first().value.map { value -> value.source }.toSet()
 
@@ -166,9 +112,9 @@ class BDocumentServiceTest {
 
         val documentService = BDocumentService(DummyServer(), communicator, DummyProBKernelManager(communicator))
 
-        documentService.checkDocument(URI("src/test/resources/WD_M2.mch"))
+        documentService.checkDocument(File(File("src/test/resources/WD_M2.mch").absolutePath))
 
-        documentService.checkDocument(URI("src/test/resources/WD_M2.mch"))
+        documentService.checkDocument(File(File("src/test/resources/WD_M2.mch").absolutePath))
 
         assertEquals(emptyList(), communicator.pushedDiagnostics.entries.first().value)
     }

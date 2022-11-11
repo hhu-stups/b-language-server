@@ -9,7 +9,6 @@ import com.google.inject.Stage
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.MessageType
 import java.io.File
-import java.net.URI
 
 /**
  * Creates the prob kernel access and maintenance
@@ -71,13 +70,13 @@ class ProBKernelManager(private val communicator : CommunicatorInterface) : ProB
 
     /**
      * Checks the given document with the help of ProB
-     * @param uri the source to check
+     * @param file the source to check
      * @param settings the settings for this document
      * @return a list of all problems found
      *
      * @throws CouldNotFindProBHomeException the given path ist not "DEFAULT" and wrong
      */
-    override fun checkDocument(uri: URI, settings: Settings): List<Diagnostic> {
+    override fun checkDocument(file : File, settings: Settings): List<Diagnostic> {
 
         communicator.sendDebugMessage("try to use ${settings.probHome} as prob version instead of " + System.getProperty("prob.home"), MessageType.Info)
         val result = checkProBVersionSetting(settings.probHome)
@@ -88,7 +87,7 @@ class ProBKernelManager(private val communicator : CommunicatorInterface) : ProB
 
         communicator.sendDebugMessage("success!", MessageType.Info)
         communicator.sendDebugMessage("checking document", MessageType.Info)
-        return kernel.check(uri, ProBSettings(wdChecks = settings.wdChecks, strictChecks = settings.strictChecks,
+        return kernel.check(file, ProBSettings(wdChecks = settings.wdChecks, strictChecks = settings.strictChecks,
                 performanceHints = settings.performanceHints))
     }
 }

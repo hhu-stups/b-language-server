@@ -1,5 +1,6 @@
 package b.language.server.prob2.proBMangement
 
+import DummyCommunicator
 import b.language.server.proBMangement.prob.convertErrorItems
 import b.language.server.proBMangement.prob.getErrorItemType
 import de.prob.animator.domainobjects.ErrorItem
@@ -33,7 +34,7 @@ class UtilTest {
                          Position(endLine-1, endCol)),
                  message, DiagnosticSeverity.Error, file.absolutePath)
 
-        val errorItemAfter = convertErrorItems(listOf(errorItem), "dummy").first()
+        val errorItemAfter = convertErrorItems(listOf(errorItem), File("dummy"), DummyCommunicator() ).first()
 
         assertEquals(diagnostic, errorItemAfter)
 

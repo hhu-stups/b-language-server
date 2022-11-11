@@ -5,6 +5,7 @@ import b.language.server.proBMangement.ProBInterface
 import b.language.server.proBMangement.prob.CouldNotFindProBHomeException
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.TextDocumentService
+import java.io.File
 import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 
@@ -35,20 +36,20 @@ class BDocumentService(private val server: ServerInterface,
      */
     override fun didSave(params: DidSaveTextDocumentParams?) {
 
-        communicator.sendDebugMessage("document ${params!!.textDocument.uri} was saved", MessageType.Info)
-        checkDocument(URI(params.textDocument.uri))
+        communicator.sendDebugMessage("document ${File(URI(params!!.textDocument.uri).path)} was saved", MessageType.Info)
+        checkDocument(File(URI(params.textDocument.uri).path))
 
     }
 
     /**
      * checks a document via prob and the set options
-     * @param currentUri the uri to perform actions on
+     * @param file the uri to perform actions on
      */
-    fun checkDocument(currentUri : URI){
+    fun checkDocument(file : File){
 
 
 
-        val clientSettings = server.getDocumentSettings(currentUri.path)
+        val clientSettings = server.getDocumentSettings(file.absolutePath)
         communicator.sendDebugMessage("waiting for document settings", MessageType.Info)
 
         clientSettings.thenAccept{ settings ->
@@ -56,21 +57,22 @@ class BDocumentService(private val server: ServerInterface,
             communicator.sendDebugMessage("settings are $settings", MessageType.Info)
 
             try{
-                val diagnostics: List<Diagnostic> = proBInterface.checkDocument(currentUri, settings)
+                val diagnostics: List<Diagnostic> = proBInterface.checkDocument(file, settings)
 
                 val sortedDiagnostic = diagnostics.groupBy { it.source }
                 sortedDiagnostic.forEach { entry -> communicator.publishDiagnostics(entry.key, entry.value)}
                 communicator.showMessage("Evaluation done: ${diagnostics.size} problem(s)", MessageType.Log)
 
                 val filesWithProblems = sortedDiagnostic.keys.toList()
-                val invalidFiles = calculateToInvalidate(currentUri.path, filesWithProblems)
+                val invalidFiles = calculateToInvalidate(file, filesWithProblems)
                 invalidFiles.forEach{uri -> communicator.publishDiagnostics(uri, listOf())}
                 communicator.sendDebugMessage("invalidating old files $invalidFiles", MessageType.Info)
-                issueTracker[currentUri.path] = filesWithProblems.toSet()
+                issueTracker[file.absolutePath] = filesWithProblems.toSet()
 
             }catch (e : CouldNotFindProBHomeException){
-                communicator.sendDebugMessage(e.message!!, MessageType.Info)
-                communicator.showMessage(e.message, MessageType.Error)
+                
+                communicator.sendDebugMessage(e.localizedMessage, MessageType.Info)
+                communicator.showMessage(e.localizedMessage, MessageType.Error)
             }
         }
 
@@ -79,11 +81,11 @@ class BDocumentService(private val server: ServerInterface,
 
     /**
      * Gets all uris that are no longer contain problems
-     * @param currentUri the uri of the current main file
+     * @param file the uri of the current main file
      * @param filesWithProblems uris of files containing problems
      */
-    private fun calculateToInvalidate(currentUri : String, filesWithProblems : List<String>) : List<String>{
-        val currentlyDisplayed = issueTracker[currentUri].orEmpty()
+    private fun calculateToInvalidate(file : File, filesWithProblems : List<String>) : List<String>{
+        val currentlyDisplayed = issueTracker[file.absolutePath].orEmpty()
         return currentlyDisplayed.subtract(filesWithProblems).toList()
     }
 
@@ -96,8 +98,8 @@ class BDocumentService(private val server: ServerInterface,
      * Registration Options: TextDocumentRegistrationOptions
      */
     override fun didClose(params: DidCloseTextDocumentParams?) {
-        communicator.sendDebugMessage("document ${params!!.textDocument.uri} was closed - removing meta data", MessageType.Info)
-        server.removeDocumentSettings(params.textDocument.uri)
+        communicator.sendDebugMessage("document ${URI(params!!.textDocument.uri).path} was closed - removing meta data", MessageType.Info)
+        server.removeDocumentSettings((URI(params.textDocument.uri).path))
     }
 
     /**
@@ -107,8 +109,9 @@ class BDocumentService(private val server: ServerInterface,
      * Registration Options: TextDocumentChangeRegistrationOptions
      */
     override fun didChange(params: DidChangeTextDocumentParams?) {
-        communicator.sendDebugMessage("document ${params!!.textDocument.uri} was changed", MessageType.Info)
-        checkDocument(URI(params.textDocument.uri))
+
+        communicator.sendDebugMessage("document ${URI(params!!.textDocument.uri).path} was changed", MessageType.Info)
+        checkDocument(File(URI(params.textDocument.uri).path))
     }
 
 }
