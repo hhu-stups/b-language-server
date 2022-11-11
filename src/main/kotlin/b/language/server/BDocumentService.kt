@@ -70,7 +70,7 @@ class BDocumentService(private val server: ServerInterface,
                 issueTracker[file.absolutePath] = filesWithProblems.toSet()
 
             }catch (e : CouldNotFindProBHomeException){
-                
+
                 communicator.sendDebugMessage(e.localizedMessage, MessageType.Info)
                 communicator.showMessage(e.localizedMessage, MessageType.Error)
             }
