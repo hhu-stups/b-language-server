@@ -7,7 +7,7 @@
 
 plugins {
     // Apply the Kotlin JVM plugin to add support for Kotlin.
-    kotlin("jvm") version "1.4.0"
+    kotlin("jvm") version "1.8.0"
     idea
     // Apply the application plugin to add support for building a CLI application.
     application
@@ -17,9 +17,6 @@ plugins {
 }
 
 repositories {
-    // Use jcenter for resolving dependencies.
-    jcenter()
-
     maven("https://oss.sonatype.org/content/repositories/snapshots")
 
 }
@@ -50,7 +47,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
     testImplementation("org.junit.jupiter","junit-jupiter-engine" ,  "5.7.0-M1")
 
-    implementation("de.hhu.stups:de.prob2.kernel:4.0.0-SNAPSHOT")
+    implementation("de.hhu.stups:de.prob2.kernel:4.12.1")
 
     implementation( "com.google.guava", "guava", "28.2-jre")
 
@@ -75,13 +72,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>(){
     kotlinOptions.jvmTarget = "1.8"
 }
 
-
-tasks.shadowJar{
-  //  this.version = gitVersion().toString()
-}
-
-
 application {
-    // Define the main class for the application.
-    mainClassName = "b.language.server.AppKt"
+    mainClass.set("MainKt") // The main class of the application
 }
+
