@@ -11,12 +11,13 @@ plugins {
     idea
     // Apply the application plugin to add support for building a CLI application.
     application
-    id("com.github.johnrengelman.shadow") version "5.2.0"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
 
  //   id("com.palantir.git-version") version "0.12.2"
 }
 
 repositories {
+    mavenCentral()
     maven("https://oss.sonatype.org/content/repositories/snapshots")
 
 }
@@ -31,29 +32,29 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
 
 
     // eclipse lsp implementation
-    implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j",  "0.9.0")
+    implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j",  "0.21.0")
 
     // json converter
-    implementation("com.google.code.gson" ,"gson" ,"2.8.6")
+    implementation("com.google.code.gson" ,"gson" ,"2.10.1")
 
 
     // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-test-junit5
     testImplementation(kotlin("test-junit5"))
 
     // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
-    testImplementation("org.junit.jupiter","junit-jupiter-engine" ,  "5.7.0-M1")
+    testImplementation("org.junit.jupiter","junit-jupiter-engine" ,  "5.10.0-M1")
 
     implementation("de.hhu.stups:de.prob2.kernel:4.12.1")
 
-    implementation( "com.google.guava", "guava", "28.2-jre")
+    implementation( "com.google.guava", "guava", "31.1-jre")
 
 
     // https://mvnrepository.com/artifact/org.zeromq/jeromq
-    implementation ("org.zeromq",   "jeromq", "0.5.2")
+    implementation ("org.zeromq",   "jeromq", "0.5.3")
 
 
 }
