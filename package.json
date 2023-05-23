@@ -1,0 +1,40 @@
+{
+  "name": "b-language-server",
+  "version": "2.0.0",
+  "description": "a java based language server implementing the lsp",
+  "main": "index.js",
+  "scripts": {
+    "install:nix": "./gradlew shadowjar",
+    "install:windows": "./gradlew.bat shadowjar"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SeeBasTStick/b-language-server.git"
+  },
+  "files": [
+    "gradle/wrapper/*",
+    "src/*",
+    "package.json",
+    "gradlew",
+    "build.gradle.kts",
+    "gradlew.bat",
+    "settings.gradle.kts",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "lsp",
+    "b",
+    "java"
+  ],
+  "author": "Sebastian Stock",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SeeBasTStick/b-language-server/issues"
+  },
+  "homepage": "https://github.com/SeeBasTStick/b-language-server#readme",
+
+  "dependencies": {
+    "run-script-os": "^1.1.1"
+  }
+}
