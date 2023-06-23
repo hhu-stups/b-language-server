@@ -28,7 +28,7 @@
     "java"
   ],
   "author": "Sebastian Stock",
-  "license": "MIT",
+  "license": "EPL-2.0",
   "bugs": {
     "url": "https://github.com/SeeBasTStick/b-language-server/issues"
   },
