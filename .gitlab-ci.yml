@@ -1,0 +1,16 @@
+test:
+  stage: test
+  image: eclipse-temurin:8
+  variables:
+    GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
+  script:
+    - ./gradlew check shadowJar
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - build/libs/b-language-server-all.jar
+  cache:
+    paths:
+      - .gradle/caches
+      - .gradle/native
+      - .gradle/wrapper
