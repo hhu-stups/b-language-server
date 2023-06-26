@@ -31,10 +31,6 @@ dependencies {
     // Use the Kotlin JDK 8 standard library.
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
-
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
-
-
     // eclipse lsp implementation
     implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.20.1")
 
@@ -49,14 +45,6 @@ dependencies {
     testImplementation("org.junit.jupiter","junit-jupiter-engine" ,  "5.10.0-M1")
 
     implementation("de.hhu.stups:de.prob2.kernel:4.12.1")
-
-    implementation( "com.google.guava", "guava", "31.1-jre")
-
-
-    // https://mvnrepository.com/artifact/org.zeromq/jeromq
-    implementation ("org.zeromq",   "jeromq", "0.5.3")
-
-
 }
 
 java {
