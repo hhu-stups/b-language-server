@@ -29,4 +29,3 @@ hs_err_pid*
 build
 /.idea
 /lsp
-/node_modules/
