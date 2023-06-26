@@ -34,10 +34,6 @@ dependencies {
     // eclipse lsp implementation
     implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.20.1")
 
-    // json converter
-    implementation("com.google.code.gson" ,"gson" ,"2.10.1")
-
-
     // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-test-junit5
     testImplementation(kotlin("test-junit5"))
 
