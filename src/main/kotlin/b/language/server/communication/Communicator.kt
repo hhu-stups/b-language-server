@@ -36,7 +36,6 @@ object Communicator : CommunicatorInterface {
      */
     override fun sendDebugMessage(message: String, severity: MessageType) {
         if(debugMode) {
-            println("Debug messages: $message")
             client.logMessage(MessageParams(severity, message))
         }
 

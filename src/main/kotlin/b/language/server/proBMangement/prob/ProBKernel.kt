@@ -95,14 +95,7 @@ class ProBKernel @Inject constructor(private val injector : Injector,
 
         communicator.sendDebugMessage("processing errors", MessageType.Info)
         newStateSpace.kill()
-        var bla : List<Diagnostic> = emptyList()
-        try {
-            bla = convertErrorItems(errors, file, communicator)
-        }catch (e : Exception){
-            println(e)
-        }
-
-        return bla
+        return convertErrorItems(errors, file, communicator)
     }
 
 
