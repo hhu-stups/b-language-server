@@ -74,6 +74,6 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>(){
 }
 
 application {
-    mainClass.set("MainKt") // The main class of the application
+    mainClass.set("b.language.server.AppKt") // The main class of the application
 }
 
