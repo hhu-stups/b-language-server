@@ -36,7 +36,7 @@ dependencies {
 
 
     // eclipse lsp implementation
-    implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j",  "0.21.0")
+    implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.20.1")
 
     // json converter
     implementation("com.google.code.gson" ,"gson" ,"2.10.1")
