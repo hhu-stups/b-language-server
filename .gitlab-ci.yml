@@ -9,6 +9,9 @@ test:
     expire_in: 1 week
     paths:
       - build/libs/b-language-server-all.jar
+    reports:
+      junit:
+        - "build/test-results/**/TEST-*.xml"
   cache:
     paths:
       - .gradle/caches
