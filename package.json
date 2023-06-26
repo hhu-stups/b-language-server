@@ -3,10 +3,6 @@
   "version": "2.0.0",
   "description": "a java based language server implementing the lsp",
   "main": "index.js",
-  "scripts": {
-    "install:nix": "./gradlew shadowjar",
-    "install:windows": "./gradlew.bat shadowjar"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hhu-stups/b-language-server.git"
@@ -32,9 +28,5 @@
   "bugs": {
     "url": "https://github.com/hhu-stups/prob-issues/issues"
   },
-  "homepage": "https://github.com/hhu-stups/b-language-server#readme",
-
-  "dependencies": {
-    "run-script-os": "^1.1.1"
-  }
+  "homepage": "https://github.com/hhu-stups/b-language-server#readme"
 }
