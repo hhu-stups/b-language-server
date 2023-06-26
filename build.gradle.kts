@@ -12,8 +12,6 @@ plugins {
     // Apply the application plugin to add support for building a CLI application.
     application
     id("com.github.johnrengelman.shadow") version "7.0.0"
-
- //   id("com.palantir.git-version") version "0.12.2"
 }
 
 repositories {
@@ -51,8 +49,6 @@ java {
 tasks.test {
     useJUnitPlatform()
 }
-
-val gitVersion: groovy.lang.Closure<*> by extra
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>(){
     kotlinOptions.jvmTarget = "1.8"
