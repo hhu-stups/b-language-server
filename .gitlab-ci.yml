@@ -20,13 +20,9 @@ test:
 
 trigger_extension_build:
   stage: .post
-  image: alpine:3
-  dependencies: []
-  variables:
-    GIT_STRATEGY: none
-  before_script:
-    - apk add --update curl
-  script:
-    - curl -X POST -F "token=$CI_JOB_TOKEN" -F "ref=main" https://gitlab.cs.uni-duesseldorf.de/api/v4/projects/2835/trigger/pipeline
+  trigger:
+    project: general/stups/b_language_extension
+    forward:
+      yaml_variables: false
   only:
     - master@general/stups/b_language_server
