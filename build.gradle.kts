@@ -32,7 +32,7 @@ dependencies {
     testImplementation("org.junit.jupiter", "junit-jupiter-engine", "5.10.2")
 
     implementation(platform("de.hhu.stups:prob-java-bom:4.13.0"))
-    implementation("de.hhu.stups", "de.prob2.kernel")
+    implementation("de.hhu.stups", "prob-java")
 }
 
 java {
