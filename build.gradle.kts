@@ -1,10 +1,10 @@
 plugins {
     // Apply the Kotlin JVM plugin to add support for Kotlin.
-    kotlin("jvm") version "1.8.0"
+    kotlin("jvm") version "1.9.22"
     idea
     // Apply the application plugin to add support for building a CLI application.
     application
-    id("com.github.johnrengelman.shadow") version "7.0.0"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 repositories {
@@ -29,7 +29,7 @@ dependencies {
     testImplementation(kotlin("test-junit5"))
 
     // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
-    testImplementation("org.junit.jupiter","junit-jupiter-engine" ,  "5.10.0-M1")
+    testImplementation("org.junit.jupiter", "junit-jupiter-engine", "5.10.2")
 
     implementation("de.hhu.stups:de.prob2.kernel:4.12.1")
 }
