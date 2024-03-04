@@ -31,7 +31,8 @@ dependencies {
     // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
     testImplementation("org.junit.jupiter", "junit-jupiter-engine", "5.10.2")
 
-    implementation("de.hhu.stups:de.prob2.kernel:4.12.1")
+    implementation(platform("de.hhu.stups:prob-java-bom:4.13.0"))
+    implementation("de.hhu.stups", "de.prob2.kernel")
 }
 
 java {
