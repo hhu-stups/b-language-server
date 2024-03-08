@@ -84,10 +84,10 @@ class Server : LanguageServer, ServerInterface {
             returnValue.complete(globalSettings)
 
             returnValue
-        }else{
+        } else {
             val configurationItem = ConfigurationItem()
             configurationItem.scopeUri = uri
-            configurationItem.section = "languageServer"
+            configurationItem.section = "prob"
 
             val requestedConfig = languageClient.configuration(ConfigurationParams(listOf(configurationItem)))
             documentSettings[uri] = CompletableFuture.allOf(requestedConfig).thenApply{ castJsonToSetting(requestedConfig.get().first() as JsonObject) }
