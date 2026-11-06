@@ -8,7 +8,15 @@ import java.net.ServerSocket
 import java.util.concurrent.Future
 
 
-fun main() {
+fun main(args: Array<String>) {
+    if ("--stdio" in args) {
+        // Keep log output of ProB and its dependencies away from the JSON-RPC stream.
+        val out = System.out
+        System.setOut(System.err)
+        startServer(System.`in`, out)
+        return
+    }
+
     val socket = ServerSocket(0)
 
     println("<${socket.localPort}> is the port; opening connection and listening")
