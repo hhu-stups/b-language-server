@@ -4,7 +4,7 @@ own version of probcli.
 
 ## Usage
 After starting the server; either from an IDE via main or by building and executing a shadowjar, a language client can 
-connect to it via port 55555.
+connect to it via port 55555. To communicate over stdio instead of a socket, start the server with `--stdio`.
 
 ## Capabilities
 
